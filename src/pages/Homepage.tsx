@@ -20,7 +20,7 @@ const quickActions = [
   { icon: Globe, label: "Scan Website", path: "/website-scanner" },
   { icon: Shield, label: "OTP Security", path: "/otp-security" },
   { icon: Database, label: "Data Breach Security", path: "/data-breach" },
-  { icon: Settings, label: "App Permissions", path: "/app-permissions" },
+  { icon: Settings, label: "App Permissions Check", path: "/app-permissions" },
   { icon: Brain, label: "AI Analysis", path: "/ai-analysis" },
   { icon: ShieldCheck, label: "Firewall", path: "/firewall" },
   { icon: Bug, label: "Antivirus", path: "/antivirus" },
@@ -61,7 +61,7 @@ const Homepage = () => {
         {/* Quick Actions Section */}
         <div className="animate-fade-in">
           <h3 className="text-2xl font-semibold mb-6 text-center">Quick Actions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
             {quickActions.map((action, index) => (
               <div
                 key={action.label}

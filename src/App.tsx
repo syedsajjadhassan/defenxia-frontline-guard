@@ -9,6 +9,13 @@ import Scanning from "./pages/Scanning";
 import QRScanner from "./pages/QRScanner";
 import WebsiteScanner from "./pages/WebsiteScanner";
 import Settings from "./pages/Settings";
+import WiFiSecurity from "./pages/WiFiSecurity";
+import OTPSecurity from "./pages/OTPSecurity";
+import DataBreach from "./pages/DataBreach";
+import AppPermissions from "./pages/AppPermissions";
+import AIAnalysis from "./pages/AIAnalysis";
+import Firewall from "./pages/Firewall";
+import Antivirus from "./pages/Antivirus";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,14 +34,13 @@ const App = () => (
             <Route path="/qr-scanner" element={<QRScanner />} />
             <Route path="/website-scanner" element={<WebsiteScanner />} />
             <Route path="/settings" element={<Settings />} />
-            {/* Placeholder routes for other quick actions */}
-            <Route path="/wifi-security" element={<NotFound />} />
-            <Route path="/otp-security" element={<NotFound />} />
-            <Route path="/data-breach" element={<NotFound />} />
-            <Route path="/app-permissions" element={<NotFound />} />
-            <Route path="/ai-analysis" element={<NotFound />} />
-            <Route path="/firewall" element={<NotFound />} />
-            <Route path="/antivirus" element={<NotFound />} />
+            <Route path="/wifi-security" element={<WiFiSecurity />} />
+            <Route path="/otp-security" element={<OTPSecurity />} />
+            <Route path="/data-breach" element={<DataBreach />} />
+            <Route path="/app-permissions" element={<AppPermissions />} />
+            <Route path="/ai-analysis" element={<AIAnalysis />} />
+            <Route path="/firewall" element={<Firewall />} />
+            <Route path="/antivirus" element={<Antivirus />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
