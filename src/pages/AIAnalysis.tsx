@@ -3,6 +3,7 @@ import { Send, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -38,28 +39,15 @@ const AIAnalysis = () => {
     setIsLoading(true);
 
     try {
-      // Note: This requires a Gemini API key which should be stored securely
-      // For production, this should be handled through a backend service
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=YOUR_API_KEY', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `You are a cybersecurity AI assistant. Respond to this security-related question: ${inputMessage}`
-            }]
-          }]
-        })
+      const { data, error } = await supabase.functions.invoke('ai-analysis', {
+        body: { message: inputMessage }
       });
 
-      if (!response.ok) {
-        throw new Error('API request failed');
+      if (error) {
+        throw new Error(error.message);
       }
 
-      const data = await response.json();
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I apologize, but I encountered an error processing your request.';
+      const aiResponse = data?.response || 'I apologize, but I encountered an error processing your request.';
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -73,7 +61,7 @@ const AIAnalysis = () => {
       // Fallback response when API is not available
       const fallbackMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'I apologize, but the AI service is currently unavailable. To enable AI analysis, please connect your project to Supabase and configure the Gemini API integration.',
+        content: 'I apologize, but the AI service is currently unavailable. Please ensure the Gemini API key is configured properly.',
         sender: 'ai',
         timestamp: new Date()
       };

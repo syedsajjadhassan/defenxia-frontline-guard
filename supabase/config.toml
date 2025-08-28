@@ -1,1 +1,7 @@
 project_id = "qooankzjqkgrwctvkysq"
+
+[functions.ai-analysis]
+verify_jwt = false
+
+[functions.website-scanner]
+verify_jwt = false

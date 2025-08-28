@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Globe, Search, CheckCircle, AlertTriangle, Shield, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ScanResult {
   url: string;
   status: 'safe' | 'malicious' | 'warning';
   threats: string[];
   scanTime: string;
+  analysis?: string;
+  recommendations?: string;
 }
 
 const WebsiteScanner = () => {
@@ -15,26 +18,36 @@ const WebsiteScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
 
-  const handleScan = () => {
+  const handleScan = async () => {
     if (!url.trim()) return;
     
     setIsScanning(true);
     setScanResult(null);
     
-    // Simulate scanning process
-    setTimeout(() => {
-      const random = Math.random();
-      const mockResult: ScanResult = {
+    try {
+      const { data, error } = await supabase.functions.invoke('website-scanner', {
+        body: { url: url }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setScanResult(data);
+    } catch (error) {
+      // Fallback to mock data if API fails
+      const fallbackResult: ScanResult = {
         url: url,
-        status: random > 0.7 ? 'malicious' : random > 0.4 ? 'warning' : 'safe',
-        threats: random > 0.7 ? ['Phishing attempt detected', 'Suspicious redirects'] : 
-                random > 0.4 ? ['Certificate issues'] : [],
-        scanTime: new Date().toLocaleTimeString()
+        status: 'warning',
+        threats: ['Unable to complete AI-powered scan'],
+        scanTime: new Date().toLocaleTimeString(),
+        analysis: 'AI scanning service is currently unavailable. Please ensure the Gemini API key is configured.',
+        recommendations: 'Exercise caution and manually verify website safety.'
       };
-      
-      setScanResult(mockResult);
+      setScanResult(fallbackResult);
+    } finally {
       setIsScanning(false);
-    }, 2500);
+    }
   };
 
   const getStatusColor = (status: string) => {
