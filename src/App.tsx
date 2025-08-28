@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "./components/layout/header";
+import { Footer } from "./components/layout/footer";
 import Homepage from "./pages/Homepage";
 import Scanning from "./pages/Scanning";
 import QRScanner from "./pages/QRScanner";
@@ -26,7 +27,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background pb-16">
           <Header />
           <Routes>
             <Route path="/" element={<Homepage />} />
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/antivirus" element={<Antivirus />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Footer />
         </div>
       </BrowserRouter>
     </TooltipProvider>
