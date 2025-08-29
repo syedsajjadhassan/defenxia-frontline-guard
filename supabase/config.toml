@@ -5,3 +5,15 @@ verify_jwt = false
 
 [functions.website-scanner]
 verify_jwt = false
+
+[functions.virus-scan]
+verify_jwt = false
+
+[functions.ip-security-check]
+verify_jwt = false
+
+[functions.safe-browsing-check]
+verify_jwt = false
+
+[functions.comprehensive-scan]
+verify_jwt = false

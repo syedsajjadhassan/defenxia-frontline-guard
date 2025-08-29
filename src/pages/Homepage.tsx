@@ -2,6 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { ProgressCircle } from "@/components/ui/progress-circle";
 import { QuickActionButton } from "@/components/quick-action-button";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { toast } from "sonner";
 import { 
   QrCode, 
   Wifi, 
@@ -11,7 +14,9 @@ import {
   Settings, 
   Brain, 
   ShieldCheck, 
-  Bug 
+  Bug,
+  Search,
+  AlertTriangle
 } from "lucide-react";
 
 const quickActions = [
@@ -24,10 +29,40 @@ const quickActions = [
   { icon: Brain, label: "AI Analysis", path: "/ai-analysis" },
   { icon: ShieldCheck, label: "Firewall", path: "/firewall" },
   { icon: Bug, label: "Antivirus", path: "/antivirus" },
+  { icon: Search, label: "VirusTotal Scanner", path: "/virus-scanner" },
+  { icon: AlertTriangle, label: "IP Security Check", path: "/ip-security-check" },
 ];
 
 const Homepage = () => {
   const navigate = useNavigate();
+  const [isScanning, setIsScanning] = useState(false);
+
+  const handleComprehensiveScan = async () => {
+    setIsScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('comprehensive-scan', {
+        body: { 
+          target: window.location.hostname || 'current-device',
+          scanType: 'device'
+        }
+      });
+
+      if (error) {
+        console.error('Comprehensive scan error:', error);
+        toast.error('Failed to perform comprehensive scan');
+      } else {
+        console.log('Comprehensive scan results:', data);
+        toast.success('Comprehensive scan completed successfully');
+        // Navigate to results page or show results modal
+        navigate('/scanning', { state: { scanResults: data } });
+      }
+    } catch (err) {
+      console.error('Scan error:', err);
+      toast.error('Error performing comprehensive scan');
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,10 +86,11 @@ const Homepage = () => {
 
           {/* Scan Button */}
           <Button
-            onClick={() => navigate("/scanning")}
+            onClick={handleComprehensiveScan}
+            disabled={isScanning}
             className="glow-button text-white font-semibold px-8 py-4 text-lg rounded-full min-w-[280px]"
           >
-            Initiate Comprehensive Scan
+            {isScanning ? 'Scanning...' : 'Initiate Comprehensive Scan'}
           </Button>
         </div>
 

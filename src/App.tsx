@@ -17,6 +17,8 @@ import AppPermissions from "./pages/AppPermissions";
 import AIAnalysis from "./pages/AIAnalysis";
 import Firewall from "./pages/Firewall";
 import Antivirus from "./pages/Antivirus";
+import VirusScanner from "./pages/VirusScanner";
+import IPSecurityCheck from "./pages/IPSecurityCheck";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/ai-analysis" element={<AIAnalysis />} />
             <Route path="/firewall" element={<Firewall />} />
             <Route path="/antivirus" element={<Antivirus />} />
+            <Route path="/virus-scanner" element={<VirusScanner />} />
+            <Route path="/ip-security-check" element={<IPSecurityCheck />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />
