@@ -1,92 +1,33 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { QrCode, Camera, RotateCcw, CheckCircle, AlertTriangle } from "lucide-react";
-import QrScanner from "qr-scanner";
 
 const QRScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [isSafe, setIsSafe] = useState<boolean | null>(null);
-  const [hasCamera, setHasCamera] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const qrScannerRef = useRef<QrScanner | null>(null);
 
-  useEffect(() => {
-    return () => {
-      // Cleanup scanner on unmount
-      if (qrScannerRef.current) {
-        qrScannerRef.current.stop();
-        qrScannerRef.current.destroy();
-      }
-    };
-  }, []);
-
-  const checkUrlSafety = (url: string): boolean => {
-    // Basic URL safety check - you can enhance this with your own logic
-    const suspiciousPatterns = [
-      /bit\.ly/i,
-      /tinyurl/i,
-      /t\.co/i,
-      /goo\.gl/i,
-      /ow\.ly/i,
-      /short/i,
-      /phishing/i,
-      /malware/i,
-      /virus/i
-    ];
+  const startScanning = () => {
+    setIsScanning(true);
+    setScanResult(null);
+    setIsSafe(null);
     
-    return !suspiciousPatterns.some(pattern => pattern.test(url));
-  };
-
-  const startScanning = async () => {
-    if (!videoRef.current) return;
-
-    try {
-      setIsScanning(true);
-      setScanResult(null);
-      setIsSafe(null);
-
-      const qrScanner = new QrScanner(
-        videoRef.current,
-        (result) => {
-          const scannedUrl = result.data;
-          const safety = checkUrlSafety(scannedUrl);
-          
-          setScanResult(scannedUrl);
-          setIsSafe(safety);
-          setIsScanning(false);
-          
-          qrScanner.stop();
-        },
-        {
-          onDecodeError: (error) => {
-            console.log("QR decode error:", error);
-          },
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-        }
-      );
-
-      qrScannerRef.current = qrScanner;
-      await qrScanner.start();
-    } catch (error) {
-      console.error("Error starting QR scanner:", error);
-      setHasCamera(false);
+    // Simulate QR code detection after 3 seconds
+    setTimeout(() => {
+      const mockResult = "https://example.com/secure-link";
+      const mockSafety = Math.random() > 0.3; // 70% chance of being safe
+      
+      setScanResult(mockResult);
+      setIsSafe(mockSafety);
       setIsScanning(false);
-    }
+    }, 3000);
   };
 
   const stopScanning = () => {
-    if (qrScannerRef.current) {
-      qrScannerRef.current.stop();
-    }
     setIsScanning(false);
   };
 
   const resetScanner = () => {
-    if (qrScannerRef.current) {
-      qrScannerRef.current.stop();
-    }
     setIsScanning(false);
     setScanResult(null);
     setIsSafe(null);
@@ -106,25 +47,33 @@ const QRScanner = () => {
         {/* Camera View */}
         <div className="glass-card p-6 rounded-2xl mb-6 animate-fade-in">
           <div className="aspect-video bg-secondary/20 rounded-lg mb-6 relative overflow-hidden">
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover rounded-lg"
-              style={{ display: isScanning ? 'block' : 'none' }}
-            />
-            
             {!isScanning && !scanResult && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">
-                    {hasCamera ? "Camera preview will appear here" : "Camera access not available"}
-                  </p>
+                  <p className="text-muted-foreground">Camera preview will appear here</p>
+                </div>
+              </div>
+            )}
+            
+            {isScanning && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-48 h-48 border-2 border-primary rounded-lg relative mb-4">
+                    <div className="absolute inset-2 border border-primary/50 rounded animate-pulse"></div>
+                    <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-primary"></div>
+                    <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-primary"></div>
+                    <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-primary"></div>
+                    <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-primary"></div>
+                  </div>
+                  <p className="text-primary font-medium">Point camera at QR code</p>
+                  <p className="text-sm text-muted-foreground mt-1">Scanning for codes...</p>
                 </div>
               </div>
             )}
 
             {scanResult && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/90">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center p-6">
                   {isSafe ? (
                     <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
@@ -134,7 +83,7 @@ const QRScanner = () => {
                   <h3 className={`text-xl font-semibold mb-2 ${isSafe ? 'text-success' : 'text-destructive'}`}>
                     {isSafe ? 'Safe QR Code' : 'Potentially Malicious'}
                   </h3>
-                  <p className="text-sm text-muted-foreground break-all max-w-md">
+                  <p className="text-sm text-muted-foreground break-all">
                     {scanResult}
                   </p>
                 </div>
