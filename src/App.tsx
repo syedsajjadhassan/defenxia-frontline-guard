@@ -33,136 +33,110 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+          <div className="min-h-screen bg-background pb-16">
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={
+                <ProtectedRoute>
                   <Header />
                   <Homepage />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/scanning" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/scanning" element={
+                <ProtectedRoute>
                   <Header />
                   <Scanning />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/qr-scanner" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/qr-scanner" element={
+                <ProtectedRoute>
                   <Header />
                   <QRScanner />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/website-scanner" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/website-scanner" element={
+                <ProtectedRoute>
                   <Header />
                   <WebsiteScanner />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute>
                   <Header />
                   <Settings />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/wifi-security" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/wifi-security" element={
+                <ProtectedRoute>
                   <Header />
                   <WiFiSecurity />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/otp-security" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/otp-security" element={
+                <ProtectedRoute>
                   <Header />
                   <OTPSecurity />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/data-breach" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/data-breach" element={
+                <ProtectedRoute>
                   <Header />
                   <DataBreach />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/app-permissions" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/app-permissions" element={
+                <ProtectedRoute>
                   <Header />
                   <AppPermissions />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/ai-analysis" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/ai-analysis" element={
+                <ProtectedRoute>
                   <Header />
                   <AIAnalysis />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/firewall" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/firewall" element={
+                <ProtectedRoute>
                   <Header />
                   <Firewall />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/antivirus" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/antivirus" element={
+                <ProtectedRoute>
                   <Header />
                   <Antivirus />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/virus-scanner" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/virus-scanner" element={
+                <ProtectedRoute>
                   <Header />
                   <VirusScanner />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="/ip-security-check" element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background pb-16">
+                </ProtectedRoute>
+              } />
+              <Route path="/ip-security-check" element={
+                <ProtectedRoute>
                   <Header />
                   <IPSecurityCheck />
                   <Footer />
-                </div>
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
