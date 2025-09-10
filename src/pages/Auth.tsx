@@ -8,21 +8,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Chrome } from 'lucide-react';
-
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
-  const { toast } = useToast();
+  const {
+    signIn,
+    signUp,
+    signInWithGoogle,
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
-
   useEffect(() => {
     if (user) {
       navigate('/');
     }
   }, [user, navigate]);
-
   const handleEmailAuth = async (isSignUp: boolean) => {
     if (!email || !password) {
       toast({
@@ -32,13 +36,11 @@ const Auth = () => {
       });
       return;
     }
-
     setIsLoading(true);
     try {
-      const { error } = isSignUp 
-        ? await signUp(email, password)
-        : await signIn(email, password);
-
+      const {
+        error
+      } = isSignUp ? await signUp(email, password) : await signIn(email, password);
       if (error) {
         toast({
           title: "Authentication Error",
@@ -55,11 +57,12 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
-
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      const { error } = await signInWithGoogle();
+      const {
+        error
+      } = await signInWithGoogle();
       if (error) {
         toast({
           title: "Authentication Error",
@@ -71,15 +74,13 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-4">
+  return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Shield className="h-12 w-12 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">DefenXia Guard</CardTitle>
+          <CardTitle className="text-2xl font-bold">Defenxia</CardTitle>
           <CardDescription>
             Secure your digital presence with advanced security scanning
           </CardDescription>
@@ -94,31 +95,13 @@ const Auth = () => {
             <TabsContent value="signin" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">Email</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
+                <Input id="signin-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signin-password">Password</Label>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                />
+                <Input id="signin-password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
               </div>
-              <Button
-                onClick={() => handleEmailAuth(false)}
-                className="w-full"
-                disabled={isLoading}
-              >
+              <Button onClick={() => handleEmailAuth(false)} className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </TabsContent>
@@ -126,31 +109,13 @@ const Auth = () => {
             <TabsContent value="signup" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
+                <Input id="signup-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                />
+                <Input id="signup-password" type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
               </div>
-              <Button
-                onClick={() => handleEmailAuth(true)}
-                className="w-full"
-                disabled={isLoading}
-              >
+              <Button onClick={() => handleEmailAuth(true)} className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Sign Up"}
               </Button>
             </TabsContent>
@@ -167,19 +132,12 @@ const Auth = () => {
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={handleGoogleAuth}
-            className="w-full"
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={handleGoogleAuth} className="w-full" disabled={isLoading}>
             <Chrome className="mr-2 h-4 w-4" />
             Continue with Google
           </Button>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default Auth;
