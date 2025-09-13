@@ -83,7 +83,7 @@ const Auth = () => {
     }
     setIsLoading(true);
     try {
-      const { error } = await verifyOtp(email, otp, 'signup');
+      const { error } = await verifyOtp(email, otp, 'email');
       if (error) {
         toast({
           title: "Verification Error",

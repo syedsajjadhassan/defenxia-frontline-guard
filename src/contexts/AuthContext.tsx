@@ -9,7 +9,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
-  verifyOtp: (email: string, token: string, type: 'signup' | 'email_change' | 'recovery' | 'invite' | 'magiclink') => Promise<{ error: any }>;
+  verifyOtp: (email: string, token: string, type: 'signup' | 'email_change' | 'recovery' | 'invite' | 'magiclink' | 'email') => Promise<{ error: any }>;
   loading: boolean;
 }
 
@@ -59,11 +59,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+    // Use signInWithOtp to send OTP code instead of email confirmation
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
       options: {
-        emailRedirectTo: undefined, // Disable email redirect to use OTP instead
+        shouldCreateUser: true, // This will create a user if one doesn't exist
+        data: {
+          password: password // Store password for later use after OTP verification
+        }
       }
     });
     return { error };
@@ -82,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const verifyOtp = async (email: string, token: string, type: 'signup' | 'email_change' | 'recovery' | 'invite' | 'magiclink') => {
+  const verifyOtp = async (email: string, token: string, type: 'signup' | 'email_change' | 'recovery' | 'invite' | 'magiclink' | 'email') => {
     const { error } = await supabase.auth.verifyOtp({
       email,
       token,
