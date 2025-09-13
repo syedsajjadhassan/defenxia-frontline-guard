@@ -64,6 +64,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: {
         emailRedirectTo: undefined, // Disable email redirect to use OTP instead
+        data: {
+          email_confirm: false // Request OTP instead of email confirmation
+        }
       }
     });
     return { error };
