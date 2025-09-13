@@ -5,17 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Chrome } from 'lucide-react';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [showOtpStep, setShowOtpStep] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const {
     signIn,
     signUp,
     signInWithGoogle,
+    verifyOtp,
     user
   } = useAuth();
   const {
@@ -38,20 +42,61 @@ const Auth = () => {
     }
     setIsLoading(true);
     try {
-      const {
-        error
-      } = isSignUp ? await signUp(email, password) : await signIn(email, password);
+      if (isSignUp) {
+        const { error } = await signUp(email, password);
+        if (error) {
+          toast({
+            title: "Authentication Error",
+            description: error.message,
+            variant: "destructive"
+          });
+        } else {
+          setShowOtpStep(true);
+          toast({
+            title: "OTP Sent",
+            description: "Please check your email for the verification code"
+          });
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast({
+            title: "Authentication Error",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpVerification = async () => {
+    if (!otp || otp.length !== 6) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid 6-digit code",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await verifyOtp(email, otp, 'signup');
       if (error) {
         toast({
-          title: "Authentication Error",
+          title: "Verification Error",
           description: error.message,
           variant: "destructive"
         });
-      } else if (isSignUp) {
+      } else {
         toast({
           title: "Success",
-          description: "Please check your email to verify your account"
+          description: "Account verified successfully!"
         });
+        setShowOtpStep(false);
+        // User will be automatically signed in after OTP verification
       }
     } finally {
       setIsLoading(false);
@@ -107,17 +152,55 @@ const Auth = () => {
             </TabsContent>
 
             <TabsContent value="signup" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input id="signup-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input id="signup-password" type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
-              </div>
-              <Button onClick={() => handleEmailAuth(true)} className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Sign Up"}
-              </Button>
+              {!showOtpStep ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input id="signup-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input id="signup-password" type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
+                  </div>
+                  <Button onClick={() => handleEmailAuth(true)} className="w-full" disabled={isLoading}>
+                    {isLoading ? "Creating account..." : "Sign Up"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2 text-center">
+                    <Label>Enter verification code sent to {email}</Label>
+                    <div className="flex justify-center">
+                      <InputOTP 
+                        maxLength={6} 
+                        value={otp} 
+                        onChange={setOtp}
+                        disabled={isLoading}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                  </div>
+                  <Button onClick={handleOtpVerification} className="w-full" disabled={isLoading}>
+                    {isLoading ? "Verifying..." : "Verify Code"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowOtpStep(false)} 
+                    className="w-full" 
+                    disabled={isLoading}
+                  >
+                    Back to Sign Up
+                  </Button>
+                </>
+              )}
             </TabsContent>
           </Tabs>
 
