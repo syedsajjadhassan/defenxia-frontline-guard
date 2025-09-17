@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Chrome } from 'lucide-react';
+import Spline from '@splinetool/react-spline';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -119,8 +119,17 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
-  return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-4">
-      <Card className="w-full max-w-md">
+  return (
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Spline 3D Background */}
+      <div className="absolute inset-0 z-0">
+        <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-background via-background to-secondary/20" />}>
+          <Spline scene="https://prod.spline.design/orb-aVWBD09pYlVY5C2EUaDo9q9E/scene.splinecode" />
+        </Suspense>
+      </div>
+      
+      {/* Auth Card */}
+      <Card className="w-full max-w-md relative z-10 bg-background/80 backdrop-blur-sm border border-border/50">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Shield className="h-12 w-12 text-primary" />
@@ -130,79 +139,82 @@ const Auth = () => {
             Secure your digital presence with advanced security scanning
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="signin" className="space-y-4">
+        <CardContent className="space-y-4">
+          {!showOtpStep ? (
+            <>
               <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
-                <Input id="signin-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  disabled={isLoading} 
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signin-password">Password</Label>
-                <Input id="signin-password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Enter your password" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  disabled={isLoading} 
+                />
               </div>
-              <Button onClick={() => handleEmailAuth(false)} className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </TabsContent>
-
-            <TabsContent value="signup" className="space-y-4">
-              {!showOtpStep ? (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input id="signup-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input id="signup-password" type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
-                  </div>
-                  <Button onClick={() => handleEmailAuth(true)} className="w-full" disabled={isLoading}>
-                    {isLoading ? "Creating account..." : "Sign Up"}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div className="space-y-2 text-center">
-                    <Label>Enter verification code sent to {email}</Label>
-                    <div className="flex justify-center">
-                      <InputOTP 
-                        maxLength={6} 
-                        value={otp} 
-                        onChange={setOtp}
-                        disabled={isLoading}
-                      >
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                  </div>
-                  <Button onClick={handleOtpVerification} className="w-full" disabled={isLoading}>
-                    {isLoading ? "Verifying..." : "Verify Code"}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowOtpStep(false)} 
-                    className="w-full" 
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => handleEmailAuth(false)} 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Signing in..." : "Sign In"}
+                </Button>
+                <Button 
+                  onClick={() => handleEmailAuth(true)} 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating..." : "Sign Up"}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2 text-center">
+                <Label>Enter verification code sent to {email}</Label>
+                <div className="flex justify-center">
+                  <InputOTP 
+                    maxLength={6} 
+                    value={otp} 
+                    onChange={setOtp}
                     disabled={isLoading}
                   >
-                    Back to Sign Up
-                  </Button>
-                </>
-              )}
-            </TabsContent>
-          </Tabs>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+              </div>
+              <Button onClick={handleOtpVerification} className="w-full" disabled={isLoading}>
+                {isLoading ? "Verifying..." : "Verify Code"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowOtpStep(false)} 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                Back
+              </Button>
+            </>
+          )}
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -221,6 +233,7 @@ const Auth = () => {
           </Button>
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 };
 export default Auth;
