@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Chrome } from 'lucide-react';
-import Spline from '@splinetool/react-spline';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -119,27 +118,14 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
-  const SplineBackground = () => {
-    try {
-      return (
-        <Spline 
-          scene="https://prod.spline.design/6Wq1Q7YGyM-iab9X/scene.splinecode"
-          onError={() => console.log('Spline scene failed to load')}
-        />
-      );
-    } catch (error) {
-      console.error('Spline error:', error);
-      return <div className="w-full h-full bg-gradient-to-br from-background via-background to-secondary/20" />;
-    }
-  };
-
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4">
-      {/* Spline 3D Background */}
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      {/* Animated Background */}
       <div className="absolute inset-0 z-0">
-        <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-background via-background to-secondary/20" />}>
-          <SplineBackground />
-        </Suspense>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/30" />
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/15 rounded-full blur-3xl animate-bounce" />
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/10 rounded-full blur-2xl animate-ping" />
       </div>
       
       {/* Auth Card */}
