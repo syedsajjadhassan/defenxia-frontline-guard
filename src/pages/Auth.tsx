@@ -119,12 +119,26 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+  const SplineBackground = () => {
+    try {
+      return (
+        <Spline 
+          scene="https://prod.spline.design/6Wq1Q7YGyM-iab9X/scene.splinecode"
+          onError={() => console.log('Spline scene failed to load')}
+        />
+      );
+    } catch (error) {
+      console.error('Spline error:', error);
+      return <div className="w-full h-full bg-gradient-to-br from-background via-background to-secondary/20" />;
+    }
+  };
+
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
       {/* Spline 3D Background */}
       <div className="absolute inset-0 z-0">
         <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-background via-background to-secondary/20" />}>
-          <Spline scene="https://prod.spline.design/orb-aVWBD09pYlVY5C2EUaDo9q9E/scene.splinecode" />
+          <SplineBackground />
         </Suspense>
       </div>
       
