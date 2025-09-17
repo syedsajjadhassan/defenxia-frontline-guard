@@ -3,12 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import { Header } from "./components/layout/header";
 import { Footer } from "./components/layout/footer";
 import Homepage from "./pages/Homepage";
-import Auth from "./pages/Auth";
 import Scanning from "./pages/Scanning";
 import QRScanner from "./pages/QRScanner";
 import WebsiteScanner from "./pages/WebsiteScanner";
@@ -30,114 +27,111 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <div className="min-h-screen bg-background pb-16">
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Header />
-                  <Homepage />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/scanning" element={
-                <ProtectedRoute>
-                  <Header />
-                  <Scanning />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/qr-scanner" element={
-                <ProtectedRoute>
-                  <Header />
-                  <QRScanner />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/website-scanner" element={
-                <ProtectedRoute>
-                  <Header />
-                  <WebsiteScanner />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute>
-                  <Header />
-                  <Settings />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/wifi-security" element={
-                <ProtectedRoute>
-                  <Header />
-                  <WiFiSecurity />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/otp-security" element={
-                <ProtectedRoute>
-                  <Header />
-                  <OTPSecurity />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/data-breach" element={
-                <ProtectedRoute>
-                  <Header />
-                  <DataBreach />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/app-permissions" element={
-                <ProtectedRoute>
-                  <Header />
-                  <AppPermissions />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/ai-analysis" element={
-                <ProtectedRoute>
-                  <Header />
-                  <AIAnalysis />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/firewall" element={
-                <ProtectedRoute>
-                  <Header />
-                  <Firewall />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/antivirus" element={
-                <ProtectedRoute>
-                  <Header />
-                  <Antivirus />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/virus-scanner" element={
-                <ProtectedRoute>
-                  <Header />
-                  <VirusScanner />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="/ip-security-check" element={
-                <ProtectedRoute>
-                  <Header />
-                  <IPSecurityCheck />
-                  <Footer />
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </AuthProvider>
+        <Toaster />
+        <Sonner />
+        <div className="min-h-screen bg-background pb-16">
+          <Routes>
+            <Route path="/" element={
+              <>
+                <Header />
+                <Homepage />
+                <Footer />
+              </>
+            } />
+            <Route path="/scanning" element={
+              <>
+                <Header />
+                <Scanning />
+                <Footer />
+              </>
+            } />
+            <Route path="/qr-scanner" element={
+              <>
+                <Header />
+                <QRScanner />
+                <Footer />
+              </>
+            } />
+            <Route path="/website-scanner" element={
+              <>
+                <Header />
+                <WebsiteScanner />
+                <Footer />
+              </>
+            } />
+            <Route path="/settings" element={
+              <>
+                <Header />
+                <Settings />
+                <Footer />
+              </>
+            } />
+            <Route path="/wifi-security" element={
+              <>
+                <Header />
+                <WiFiSecurity />
+                <Footer />
+              </>
+            } />
+            <Route path="/otp-security" element={
+              <>
+                <Header />
+                <OTPSecurity />
+                <Footer />
+              </>
+            } />
+            <Route path="/data-breach" element={
+              <>
+                <Header />
+                <DataBreach />
+                <Footer />
+              </>
+            } />
+            <Route path="/app-permissions" element={
+              <>
+                <Header />
+                <AppPermissions />
+                <Footer />
+              </>
+            } />
+            <Route path="/ai-analysis" element={
+              <>
+                <Header />
+                <AIAnalysis />
+                <Footer />
+              </>
+            } />
+            <Route path="/firewall" element={
+              <>
+                <Header />
+                <Firewall />
+                <Footer />
+              </>
+            } />
+            <Route path="/antivirus" element={
+              <>
+                <Header />
+                <Antivirus />
+                <Footer />
+              </>
+            } />
+            <Route path="/virus-scanner" element={
+              <>
+                <Header />
+                <VirusScanner />
+                <Footer />
+              </>
+            } />
+            <Route path="/ip-security-check" element={
+              <>
+                <Header />
+                <IPSecurityCheck />
+                <Footer />
+              </>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </TooltipProvider>
     </BrowserRouter>
   </QueryClientProvider>
