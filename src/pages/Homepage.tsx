@@ -23,7 +23,7 @@ const quickActions = [
   { icon: QrCode, label: "Scan QR Code", path: "/qr-scanner" },
   { icon: Wifi, label: "WiFi Security", path: "/wifi-security" },
   { icon: Globe, label: "Scan Website", path: "/website-scanner" },
-  { icon: Shield, label: "OTP Security", path: "/otp-security" },
+  { icon: Shield, label: "Report & Analysis", path: "/report-analysis" },
   { icon: Database, label: "Data Breach Security", path: "/data-breach" },
   { icon: Settings, label: "App Permissions Check", path: "/app-permissions" },
   { icon: Brain, label: "AI Analysis", path: "/ai-analysis" },

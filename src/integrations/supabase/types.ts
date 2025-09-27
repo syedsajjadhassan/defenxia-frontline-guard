@@ -14,6 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
+      antivirus_scan_results: {
+        Row: {
+          analysis_result: Json | null
+          created_at: string
+          files_scanned: number | null
+          id: string
+          scan_date: string
+          scan_type: string
+          threat_details: Json | null
+          threats_detected: number | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          created_at?: string
+          files_scanned?: number | null
+          id?: string
+          scan_date?: string
+          scan_type?: string
+          threat_details?: Json | null
+          threats_detected?: number | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          created_at?: string
+          files_scanned?: number | null
+          id?: string
+          scan_date?: string
+          scan_type?: string
+          threat_details?: Json | null
+          threats_detected?: number | null
+        }
+        Relationships: []
+      }
+      app_permission_results: {
+        Row: {
+          analysis_result: Json | null
+          app_name: string
+          created_at: string
+          id: string
+          permissions: Json | null
+          risk_level: string | null
+          scan_date: string
+          suspicious_permissions: string[] | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          app_name: string
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          risk_level?: string | null
+          scan_date?: string
+          suspicious_permissions?: string[] | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          app_name?: string
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          risk_level?: string | null
+          scan_date?: string
+          suspicious_permissions?: string[] | null
+        }
+        Relationships: []
+      }
+      data_breach_results: {
+        Row: {
+          analysis_result: Json | null
+          breach_details: Json | null
+          breaches_found: number | null
+          created_at: string
+          email_checked: string | null
+          id: string
+          scan_date: string
+          scan_type: string
+        }
+        Insert: {
+          analysis_result?: Json | null
+          breach_details?: Json | null
+          breaches_found?: number | null
+          created_at?: string
+          email_checked?: string | null
+          id?: string
+          scan_date?: string
+          scan_type?: string
+        }
+        Update: {
+          analysis_result?: Json | null
+          breach_details?: Json | null
+          breaches_found?: number | null
+          created_at?: string
+          email_checked?: string | null
+          id?: string
+          scan_date?: string
+          scan_type?: string
+        }
+        Relationships: []
+      }
+      firewall_scan_results: {
+        Row: {
+          analysis_result: Json | null
+          blocked_attempts: number | null
+          created_at: string
+          id: string
+          open_ports: number[] | null
+          ports_scanned: Json | null
+          scan_date: string
+          scan_type: string
+          threat_level: string | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          blocked_attempts?: number | null
+          created_at?: string
+          id?: string
+          open_ports?: number[] | null
+          ports_scanned?: Json | null
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          blocked_attempts?: number | null
+          created_at?: string
+          id?: string
+          open_ports?: number[] | null
+          ports_scanned?: Json | null
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+        }
+        Relationships: []
+      }
+      ip_scan_results: {
+        Row: {
+          analysis_result: Json | null
+          country: string | null
+          created_at: string
+          id: string
+          ip_address: string
+          is_malicious: boolean | null
+          isp: string | null
+          scan_date: string
+          scan_type: string
+          threat_level: string | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_address: string
+          is_malicious?: boolean | null
+          isp?: string | null
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string
+          is_malicious?: boolean | null
+          isp?: string | null
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -38,6 +212,147 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      qr_scan_results: {
+        Row: {
+          analysis_result: Json | null
+          created_at: string
+          id: string
+          qr_content: string
+          scan_date: string
+          scan_type: string
+          threat_level: string | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          created_at?: string
+          id?: string
+          qr_content: string
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          created_at?: string
+          id?: string
+          qr_content?: string
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+        }
+        Relationships: []
+      }
+      virus_scan_results: {
+        Row: {
+          analysis_result: Json | null
+          created_at: string
+          file_hash: string | null
+          file_name: string | null
+          id: string
+          scan_date: string
+          scan_type: string
+          threat_level: string | null
+          virus_detected: boolean | null
+          virus_names: string[] | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          created_at?: string
+          file_hash?: string | null
+          file_name?: string | null
+          id?: string
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+          virus_detected?: boolean | null
+          virus_names?: string[] | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          created_at?: string
+          file_hash?: string | null
+          file_name?: string | null
+          id?: string
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+          virus_detected?: boolean | null
+          virus_names?: string[] | null
+        }
+        Relationships: []
+      }
+      website_scan_results: {
+        Row: {
+          analysis_result: Json | null
+          created_at: string
+          id: string
+          malware_detected: boolean | null
+          phishing_detected: boolean | null
+          scan_date: string
+          scan_type: string
+          threat_level: string | null
+          website_url: string
+        }
+        Insert: {
+          analysis_result?: Json | null
+          created_at?: string
+          id?: string
+          malware_detected?: boolean | null
+          phishing_detected?: boolean | null
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+          website_url: string
+        }
+        Update: {
+          analysis_result?: Json | null
+          created_at?: string
+          id?: string
+          malware_detected?: boolean | null
+          phishing_detected?: boolean | null
+          scan_date?: string
+          scan_type?: string
+          threat_level?: string | null
+          website_url?: string
+        }
+        Relationships: []
+      }
+      wifi_scan_results: {
+        Row: {
+          analysis_result: Json | null
+          created_at: string
+          id: string
+          network_name: string
+          scan_date: string
+          security_type: string | null
+          signal_strength: number | null
+          threat_level: string | null
+          vulnerabilities: Json | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          created_at?: string
+          id?: string
+          network_name: string
+          scan_date?: string
+          security_type?: string | null
+          signal_strength?: number | null
+          threat_level?: string | null
+          vulnerabilities?: Json | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          created_at?: string
+          id?: string
+          network_name?: string
+          scan_date?: string
+          security_type?: string | null
+          signal_strength?: number | null
+          threat_level?: string | null
+          vulnerabilities?: Json | null
         }
         Relationships: []
       }

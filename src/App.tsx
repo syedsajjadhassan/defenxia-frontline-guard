@@ -11,7 +11,7 @@ import QRScanner from "./pages/QRScanner";
 import WebsiteScanner from "./pages/WebsiteScanner";
 import Settings from "./pages/Settings";
 import WiFiSecurity from "./pages/WiFiSecurity";
-import OTPSecurity from "./pages/OTPSecurity";
+import ReportAnalysis from "./pages/ReportAnalysis";
 import DataBreach from "./pages/DataBreach";
 import AppPermissions from "./pages/AppPermissions";
 import AIAnalysis from "./pages/AIAnalysis";
@@ -73,10 +73,10 @@ const App = () => (
                 <Footer />
               </>
             } />
-            <Route path="/otp-security" element={
+            <Route path="/report-analysis" element={
               <>
                 <Header />
-                <OTPSecurity />
+                <ReportAnalysis />
                 <Footer />
               </>
             } />
