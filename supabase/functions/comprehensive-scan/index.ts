@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +22,21 @@ serve(async (req) => {
         JSON.stringify({ error: 'Session ID required' }),
         { 
           status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(sessionId);
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again later.',
+          resetAt: rateLimitResult.resetAt
+        }),
+        { 
+          status: 429, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );

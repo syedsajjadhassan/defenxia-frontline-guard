@@ -263,6 +263,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          created_at: string
+          request_count: number
+          session_id: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          request_count?: number
+          session_id: string
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          request_count?: number
+          session_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       virus_scan_results: {
         Row: {
           analysis_result: Json | null
