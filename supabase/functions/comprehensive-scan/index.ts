@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-session-id',
 };
 
 serve(async (req) => {
@@ -13,6 +13,18 @@ serve(async (req) => {
 
   try {
     const { target, scanType } = await req.json(); // target can be URL, IP, or file hash
+    
+    // Validate session ID
+    const sessionId = req.headers.get('x-session-id');
+    if (!sessionId) {
+      return new Response(
+        JSON.stringify({ error: 'Session ID required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
     
     console.log('Starting comprehensive scan for:', target, 'Type:', scanType);
 
@@ -39,6 +51,7 @@ serve(async (req) => {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': req.headers.get('Authorization') || '',
+            'x-session-id': sessionId,
           },
           body: JSON.stringify(body)
         });

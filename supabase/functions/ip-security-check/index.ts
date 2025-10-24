@@ -1,9 +1,10 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { validateInput } from "../_shared/url-validator.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-session-id',
 };
 
 serve(async (req) => {
@@ -13,6 +14,19 @@ serve(async (req) => {
 
   try {
     const { ipAddress } = await req.json();
+    
+    // Validate session ID
+    const sessionId = req.headers.get('x-session-id');
+    if (!sessionId) {
+      return new Response(
+        JSON.stringify({ error: 'Session ID required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
     const abuseIpDbApiKey = Deno.env.get('ABUSEIPDB_API_KEY');
     
     if (!abuseIpDbApiKey) {
@@ -28,6 +42,18 @@ serve(async (req) => {
     if (!ipAddress) {
       return new Response(
         JSON.stringify({ error: 'IP address is required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Validate IP address format and length
+    const ipValidation = validateInput(ipAddress, 45); // Max IPv6 length
+    if (!ipValidation.valid) {
+      return new Response(
+        JSON.stringify({ error: ipValidation.error }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

@@ -1,9 +1,10 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { validateUrl, validateInput } from "../_shared/url-validator.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-session-id',
 };
 
 serve(async (req) => {
@@ -13,6 +14,19 @@ serve(async (req) => {
 
   try {
     const { url, fileHash } = await req.json();
+    
+    // Validate session ID
+    const sessionId = req.headers.get('x-session-id');
+    if (!sessionId) {
+      return new Response(
+        JSON.stringify({ error: 'Session ID required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
     const virusTotalApiKey = Deno.env.get('VIRUSTOTAL_API_KEY');
     
     if (!virusTotalApiKey) {
@@ -23,6 +37,44 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
+
+    if (!url && !fileHash) {
+      return new Response(
+        JSON.stringify({ error: 'URL or file hash is required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Validate URL if provided
+    if (url) {
+      const urlValidation = validateUrl(url);
+      if (!urlValidation.valid) {
+        return new Response(
+          JSON.stringify({ error: urlValidation.error }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+    }
+
+    // Validate file hash if provided
+    if (fileHash) {
+      const hashValidation = validateInput(fileHash, 256);
+      if (!hashValidation.valid) {
+        return new Response(
+          JSON.stringify({ error: hashValidation.error }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
     }
 
     let response;
@@ -36,14 +88,6 @@ serve(async (req) => {
       // Scan file hash
       endpoint = `https://www.virustotal.com/vtapi/v2/file/report`;
       response = await fetch(`${endpoint}?apikey=${virusTotalApiKey}&resource=${fileHash}`);
-    } else {
-      return new Response(
-        JSON.stringify({ error: 'URL or file hash is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
     }
 
     if (!response.ok) {

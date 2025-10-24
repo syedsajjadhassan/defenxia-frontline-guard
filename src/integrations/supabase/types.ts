@@ -22,6 +22,7 @@ export type Database = {
           id: string
           scan_date: string
           scan_type: string
+          session_id: string | null
           threat_details: Json | null
           threats_detected: number | null
         }
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_details?: Json | null
           threats_detected?: number | null
         }
@@ -42,6 +44,7 @@ export type Database = {
           id?: string
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_details?: Json | null
           threats_detected?: number | null
         }
@@ -56,6 +59,7 @@ export type Database = {
           permissions: Json | null
           risk_level: string | null
           scan_date: string
+          session_id: string | null
           suspicious_permissions: string[] | null
         }
         Insert: {
@@ -66,6 +70,7 @@ export type Database = {
           permissions?: Json | null
           risk_level?: string | null
           scan_date?: string
+          session_id?: string | null
           suspicious_permissions?: string[] | null
         }
         Update: {
@@ -76,6 +81,7 @@ export type Database = {
           permissions?: Json | null
           risk_level?: string | null
           scan_date?: string
+          session_id?: string | null
           suspicious_permissions?: string[] | null
         }
         Relationships: []
@@ -90,6 +96,7 @@ export type Database = {
           id: string
           scan_date: string
           scan_type: string
+          session_id: string | null
         }
         Insert: {
           analysis_result?: Json | null
@@ -100,6 +107,7 @@ export type Database = {
           id?: string
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
         }
         Update: {
           analysis_result?: Json | null
@@ -110,6 +118,7 @@ export type Database = {
           id?: string
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
         }
         Relationships: []
       }
@@ -123,6 +132,7 @@ export type Database = {
           ports_scanned: Json | null
           scan_date: string
           scan_type: string
+          session_id: string | null
           threat_level: string | null
         }
         Insert: {
@@ -134,6 +144,7 @@ export type Database = {
           ports_scanned?: Json | null
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
         }
         Update: {
@@ -145,6 +156,7 @@ export type Database = {
           ports_scanned?: Json | null
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
         }
         Relationships: []
@@ -160,6 +172,7 @@ export type Database = {
           isp: string | null
           scan_date: string
           scan_type: string
+          session_id: string | null
           threat_level: string | null
         }
         Insert: {
@@ -172,6 +185,7 @@ export type Database = {
           isp?: string | null
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
         }
         Update: {
@@ -184,6 +198,7 @@ export type Database = {
           isp?: string | null
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
         }
         Relationships: []
@@ -223,6 +238,7 @@ export type Database = {
           qr_content: string
           scan_date: string
           scan_type: string
+          session_id: string | null
           threat_level: string | null
         }
         Insert: {
@@ -232,6 +248,7 @@ export type Database = {
           qr_content: string
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
         }
         Update: {
@@ -241,6 +258,7 @@ export type Database = {
           qr_content?: string
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
         }
         Relationships: []
@@ -254,6 +272,7 @@ export type Database = {
           id: string
           scan_date: string
           scan_type: string
+          session_id: string | null
           threat_level: string | null
           virus_detected: boolean | null
           virus_names: string[] | null
@@ -266,6 +285,7 @@ export type Database = {
           id?: string
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
           virus_detected?: boolean | null
           virus_names?: string[] | null
@@ -278,6 +298,7 @@ export type Database = {
           id?: string
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
           virus_detected?: boolean | null
           virus_names?: string[] | null
@@ -293,6 +314,7 @@ export type Database = {
           phishing_detected: boolean | null
           scan_date: string
           scan_type: string
+          session_id: string | null
           threat_level: string | null
           website_url: string
         }
@@ -304,6 +326,7 @@ export type Database = {
           phishing_detected?: boolean | null
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
           website_url: string
         }
@@ -315,6 +338,7 @@ export type Database = {
           phishing_detected?: boolean | null
           scan_date?: string
           scan_type?: string
+          session_id?: string | null
           threat_level?: string | null
           website_url?: string
         }
@@ -328,6 +352,7 @@ export type Database = {
           network_name: string
           scan_date: string
           security_type: string | null
+          session_id: string | null
           signal_strength: number | null
           threat_level: string | null
           vulnerabilities: Json | null
@@ -339,6 +364,7 @@ export type Database = {
           network_name: string
           scan_date?: string
           security_type?: string | null
+          session_id?: string | null
           signal_strength?: number | null
           threat_level?: string | null
           vulnerabilities?: Json | null
@@ -350,6 +376,7 @@ export type Database = {
           network_name?: string
           scan_date?: string
           security_type?: string | null
+          session_id?: string | null
           signal_strength?: number | null
           threat_level?: string | null
           vulnerabilities?: Json | null
