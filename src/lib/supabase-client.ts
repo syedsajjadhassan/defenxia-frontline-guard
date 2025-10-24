@@ -37,3 +37,30 @@ export async function invokeEdgeFunction<T = any>(
     return { data: null, error };
   }
 }
+
+// Helper to insert data with session ID
+export async function insertWithSession<T extends keyof Database['public']['Tables']>(
+  table: T,
+  data: Database['public']['Tables'][T]['Insert']
+) {
+  const sessionId = getOrCreateSessionId();
+  
+  // Call the set_session_id function first
+  await supabaseWithSession.rpc('set_session_id', { session_id: sessionId });
+  
+  return supabaseWithSession
+    .from(table)
+    .insert({ ...data, session_id: sessionId } as any);
+}
+
+// Helper to query data with session context
+export async function queryWithSession<T extends keyof Database['public']['Tables']>(
+  table: T
+) {
+  const sessionId = getOrCreateSessionId();
+  
+  // Call the set_session_id function first
+  await supabaseWithSession.rpc('set_session_id', { session_id: sessionId });
+  
+  return supabaseWithSession.from(table).select('*');
+}
