@@ -3,7 +3,7 @@ import { Send, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/supabase-client";
 
 interface Message {
   id: string;
@@ -39,12 +39,12 @@ const AIAnalysis = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-analysis', {
-        body: { message: inputMessage }
+      const { data, error } = await invokeEdgeFunction('ai-analysis', {
+        message: inputMessage
       });
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message || 'Failed to get AI response');
       }
 
       const aiResponse = data?.response || 'I apologize, but I encountered an error processing your request.';
