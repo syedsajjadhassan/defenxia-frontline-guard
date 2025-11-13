@@ -5,8 +5,8 @@ export function getOrCreateSessionId(): string {
   let sessionId = localStorage.getItem(SESSION_KEY);
   
   if (!sessionId) {
-    // Generate a random session ID
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // Generate a cryptographically secure random session ID
+    sessionId = crypto.randomUUID();
     localStorage.setItem(SESSION_KEY, sessionId);
   }
   
