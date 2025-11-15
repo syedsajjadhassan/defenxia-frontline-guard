@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/supabase-client";
 import { toast } from "sonner";
 import { Shield, AlertTriangle, CheckCircle, FileSearch, Globe } from "lucide-react";
 
@@ -34,9 +34,9 @@ const VirusScanner = () => {
 
     setIsScanning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('virus-scan', {
-        body: scanType === 'url' ? { url: target } : { fileHash: target }
-      });
+      const { data, error } = await invokeEdgeFunction('virus-scan', 
+        scanType === 'url' ? { url: target } : { fileHash: target }
+      );
 
       if (error) {
         console.error('VirusTotal scan error:', error);
