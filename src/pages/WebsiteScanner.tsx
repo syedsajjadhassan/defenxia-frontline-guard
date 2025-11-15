@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Globe, Search, CheckCircle, AlertTriangle, Shield, Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/supabase-client";
 
 interface ScanResult {
   url: string;
@@ -25,9 +25,9 @@ const WebsiteScanner = () => {
     setScanResult(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke('website-scanner', {
-        body: { url: url }
-      });
+      const { data, error } = await invokeEdgeFunction('website-scanner', 
+        { url: url }
+      );
 
       if (error) {
         throw new Error(error.message);
