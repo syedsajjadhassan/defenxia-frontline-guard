@@ -94,57 +94,106 @@ serve(async (req) => {
     }
 
     let response;
-    let apiUrl;
+    let analysisData;
 
     if (url) {
-      // Scan URL using v3 API
-      const urlId = btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-      apiUrl = `https://www.virustotal.com/api/v3/urls/${urlId}`;
-      response = await fetch(apiUrl, {
+      // First, submit URL for scanning using v3 API
+      const formData = new FormData();
+      formData.append('url', url);
+      
+      const submitResponse = await fetch('https://www.virustotal.com/api/v3/urls', {
+        method: 'POST',
+        headers: {
+          'x-apikey': virusTotalApiKey
+        },
+        body: formData
+      });
+
+      if (!submitResponse.ok) {
+        console.error('VirusTotal submit error:', await submitResponse.text());
+        return new Response(
+          JSON.stringify({ error: 'Failed to submit URL to VirusTotal' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      const submitData = await submitResponse.json();
+      const analysisId = submitData.data?.id;
+
+      if (!analysisId) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid response from VirusTotal' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      // Now get the analysis results
+      response = await fetch(`https://www.virustotal.com/api/v3/analyses/${analysisId}`, {
         headers: {
           'x-apikey': virusTotalApiKey
         }
       });
+
+      if (!response.ok) {
+        console.error('VirusTotal analysis error:', await response.text());
+        return new Response(
+          JSON.stringify({ error: 'Failed to get analysis from VirusTotal' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      analysisData = await response.json();
+      
     } else if (fileHash) {
       // Scan file hash using v3 API
-      apiUrl = `https://www.virustotal.com/api/v3/files/${fileHash}`;
-      response = await fetch(apiUrl, {
+      response = await fetch(`https://www.virustotal.com/api/v3/files/${fileHash}`, {
         headers: {
           'x-apikey': virusTotalApiKey
         }
       });
+
+      if (!response.ok) {
+        console.error('VirusTotal file error:', await response.text());
+        return new Response(
+          JSON.stringify({ error: 'Failed to scan file hash with VirusTotal' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      analysisData = await response.json();
     }
 
-    if (!response.ok) {
-      console.error('VirusTotal API error:', await response.text());
-      return new Response(
-        JSON.stringify({ error: 'Failed to scan with VirusTotal' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    const data = await response.json();
-    
-    const attributes = data.data?.attributes || {};
-    const stats = attributes.last_analysis_stats || {};
+    const attributes = analysisData.data?.attributes || {};
+    const stats = attributes.stats || attributes.last_analysis_stats || {};
     const malicious = stats.malicious || 0;
     const total = Object.values(stats).reduce((a: number, b: any) => a + (typeof b === 'number' ? b : 0), 0);
     
     const scanResult = {
       service: 'VirusTotal',
       resource: url || fileHash,
-      scanId: data.data?.id,
-      permalink: `https://www.virustotal.com/gui/${url ? 'url' : 'file'}/${data.data?.id}`,
-      responseCode: data.data ? 1 : 0,
+      scanId: analysisData.data?.id,
+      permalink: url 
+        ? `https://www.virustotal.com/gui/url/${btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')}`
+        : `https://www.virustotal.com/gui/file/${fileHash}`,
+      responseCode: analysisData.data ? 1 : 0,
       verbose_msg: malicious > 0 ? 'Resource found and flagged' : 'Resource found and clean',
       positives: malicious,
       total: total,
-      scanDate: attributes.last_analysis_date ? new Date(attributes.last_analysis_date * 1000).toISOString() : new Date().toISOString(),
+      scanDate: attributes.date ? new Date(attributes.date * 1000).toISOString() : new Date().toISOString(),
       status: malicious > 0 ? 'malicious' : 'clean',
-      scans: attributes.last_analysis_results,
+      scans: attributes.results || attributes.last_analysis_results,
       scanTime: new Date().toISOString()
     };
 
