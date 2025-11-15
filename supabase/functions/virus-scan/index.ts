@@ -94,16 +94,25 @@ serve(async (req) => {
     }
 
     let response;
-    let endpoint;
+    let apiUrl;
 
     if (url) {
-      // Scan URL
-      endpoint = `https://www.virustotal.com/vtapi/v2/url/report`;
-      response = await fetch(`${endpoint}?apikey=${virusTotalApiKey}&resource=${encodeURIComponent(url)}`);
+      // Scan URL using v3 API
+      const urlId = btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+      apiUrl = `https://www.virustotal.com/api/v3/urls/${urlId}`;
+      response = await fetch(apiUrl, {
+        headers: {
+          'x-apikey': virusTotalApiKey
+        }
+      });
     } else if (fileHash) {
-      // Scan file hash
-      endpoint = `https://www.virustotal.com/vtapi/v2/file/report`;
-      response = await fetch(`${endpoint}?apikey=${virusTotalApiKey}&resource=${fileHash}`);
+      // Scan file hash using v3 API
+      apiUrl = `https://www.virustotal.com/api/v3/files/${fileHash}`;
+      response = await fetch(apiUrl, {
+        headers: {
+          'x-apikey': virusTotalApiKey
+        }
+      });
     }
 
     if (!response.ok) {
@@ -119,18 +128,23 @@ serve(async (req) => {
 
     const data = await response.json();
     
+    const attributes = data.data?.attributes || {};
+    const stats = attributes.last_analysis_stats || {};
+    const malicious = stats.malicious || 0;
+    const total = Object.values(stats).reduce((a: number, b: any) => a + (typeof b === 'number' ? b : 0), 0);
+    
     const scanResult = {
       service: 'VirusTotal',
       resource: url || fileHash,
-      scanId: data.scan_id,
-      permalink: data.permalink,
-      responseCode: data.response_code,
-      verbose_msg: data.verbose_msg,
-      positives: data.positives || 0,
-      total: data.total || 0,
-      scanDate: data.scan_date,
-      status: data.positives > 0 ? 'malicious' : 'clean',
-      scans: data.scans,
+      scanId: data.data?.id,
+      permalink: `https://www.virustotal.com/gui/${url ? 'url' : 'file'}/${data.data?.id}`,
+      responseCode: data.data ? 1 : 0,
+      verbose_msg: malicious > 0 ? 'Resource found and flagged' : 'Resource found and clean',
+      positives: malicious,
+      total: total,
+      scanDate: attributes.last_analysis_date ? new Date(attributes.last_analysis_date * 1000).toISOString() : new Date().toISOString(),
+      status: malicious > 0 ? 'malicious' : 'clean',
+      scans: attributes.last_analysis_results,
       scanTime: new Date().toISOString()
     };
 

@@ -80,7 +80,7 @@ serve(async (req) => {
     console.log('Checking IP address:', ipAddress);
 
     const response = await fetch(
-      `https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ipAddress)}&maxAgeInDays=90&verbose`,
+      `https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ipAddress)}&maxAgeInDays=90`,
       {
         method: 'GET',
         headers: {
