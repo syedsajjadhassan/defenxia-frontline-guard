@@ -26,10 +26,15 @@ const VirusScanner = () => {
   const [scanType, setScanType] = useState<'url' | 'hash'>('url');
 
   const handleScan = async () => {
-    const target = scanType === 'url' ? url : fileHash;
+    let target = scanType === 'url' ? url : fileHash;
     if (!target.trim()) {
       toast.error(`Please enter a ${scanType === 'url' ? 'URL' : 'file hash'}`);
       return;
+    }
+
+    // Normalize URL by adding https:// if missing protocol
+    if (scanType === 'url' && target && !target.match(/^https?:\/\//i)) {
+      target = `https://${target}`;
     }
 
     setIsScanning(true);
