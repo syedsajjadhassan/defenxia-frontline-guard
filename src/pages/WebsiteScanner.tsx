@@ -13,38 +13,56 @@ interface ScanResult {
   recommendations?: string;
 }
 
+interface VirusTotalResult {
+  service: string;
+  positives: number;
+  total: number;
+  status: string;
+  scanDate: string;
+  permalink: string;
+}
+
 const WebsiteScanner = () => {
   const [url, setUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [vtResult, setVtResult] = useState<VirusTotalResult | null>(null);
 
   const handleScan = async () => {
     if (!url.trim()) return;
     
     setIsScanning(true);
     setScanResult(null);
+    setVtResult(null);
     
     try {
-      const { data, error } = await invokeEdgeFunction('website-scanner', 
-        { url: url }
-      );
+      // Run both scans in parallel
+      const [aiScanResponse, vtScanResponse] = await Promise.allSettled([
+        invokeEdgeFunction('website-scanner', { url: url }),
+        invokeEdgeFunction('virus-scan', { url: url })
+      ]);
 
-      if (error) {
-        throw new Error(error.message);
+      // Handle AI scan results
+      if (aiScanResponse.status === 'fulfilled' && !aiScanResponse.value.error) {
+        setScanResult(aiScanResponse.value.data);
+      } else {
+        const fallbackResult: ScanResult = {
+          url: url,
+          status: 'warning',
+          threats: ['Unable to complete AI-powered scan'],
+          scanTime: new Date().toLocaleTimeString(),
+          analysis: 'AI scanning service is currently unavailable.',
+          recommendations: 'Exercise caution and manually verify website safety.'
+        };
+        setScanResult(fallbackResult);
       }
 
-      setScanResult(data);
+      // Handle VirusTotal scan results
+      if (vtScanResponse.status === 'fulfilled' && !vtScanResponse.value.error) {
+        setVtResult(vtScanResponse.value.data);
+      }
     } catch (error) {
-      // Fallback to mock data if API fails
-      const fallbackResult: ScanResult = {
-        url: url,
-        status: 'warning',
-        threats: ['Unable to complete AI-powered scan'],
-        scanTime: new Date().toLocaleTimeString(),
-        analysis: 'AI scanning service is currently unavailable. Please ensure the Gemini API key is configured.',
-        recommendations: 'Exercise caution and manually verify website safety.'
-      };
-      setScanResult(fallbackResult);
+      console.error('Scan error:', error);
     } finally {
       setIsScanning(false);
     }
@@ -189,9 +207,41 @@ const WebsiteScanner = () => {
               </div>
             </div>
 
+            {/* VirusTotal Results */}
+            {vtResult && (
+              <div className="border-t border-border pt-6 mt-6">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  VirusTotal Security Scan
+                </h4>
+                <div className="grid gap-3">
+                  <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                    <span className="text-sm font-medium">Detection Ratio:</span>
+                    <span className={`text-sm font-bold ${vtResult.positives > 0 ? 'text-destructive' : 'text-success'}`}>
+                      {vtResult.positives} / {vtResult.total}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                    <span className="text-sm font-medium">Status:</span>
+                    <span className={`text-sm font-bold ${vtResult.status === 'clean' ? 'text-success' : 'text-destructive'}`}>
+                      {vtResult.status === 'clean' ? 'Clean' : 'Flagged'}
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => window.open(vtResult.permalink, '_blank')}
+                    variant="outline"
+                    className="w-full mt-2"
+                  >
+                    View Detailed VirusTotal Report
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <Button
               onClick={() => {
                 setScanResult(null);
+                setVtResult(null);
                 setUrl("");
               }}
               variant="outline"
