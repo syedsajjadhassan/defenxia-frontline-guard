@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url, fileHash } = await req.json();
+    const { url, fileHash, fileContent, fileName } = await req.json();
     
     // Validate session ID
     const sessionId = req.headers.get('x-session-id');
@@ -55,9 +55,9 @@ serve(async (req) => {
       );
     }
 
-    if (!url && !fileHash) {
+    if (!url && !fileHash && !fileContent) {
       return new Response(
-        JSON.stringify({ error: 'URL or file hash is required' }),
+        JSON.stringify({ error: 'URL, file hash, or file content is required' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -96,7 +96,69 @@ serve(async (req) => {
     let response;
     let analysisData;
 
-    if (url) {
+    if (fileContent) {
+      // Upload file for scanning using v3 API
+      const fileBuffer = Uint8Array.from(atob(fileContent), c => c.charCodeAt(0));
+      const blob = new Blob([fileBuffer]);
+      const formData = new FormData();
+      formData.append('file', blob, fileName || 'file');
+      
+      const uploadResponse = await fetch('https://www.virustotal.com/api/v3/files', {
+        method: 'POST',
+        headers: {
+          'x-apikey': virusTotalApiKey
+        },
+        body: formData
+      });
+
+      if (!uploadResponse.ok) {
+        console.error('VirusTotal upload error:', await uploadResponse.text());
+        return new Response(
+          JSON.stringify({ error: 'Failed to upload file to VirusTotal' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      const uploadData = await uploadResponse.json();
+      const analysisId = uploadData.data?.id;
+
+      if (!analysisId) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid response from VirusTotal' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      // Wait a bit for the scan to start
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Get the analysis results
+      response = await fetch(`https://www.virustotal.com/api/v3/analyses/${analysisId}`, {
+        headers: {
+          'x-apikey': virusTotalApiKey
+        }
+      });
+
+      if (!response.ok) {
+        console.error('VirusTotal analysis error:', await response.text());
+        return new Response(
+          JSON.stringify({ error: 'Failed to get analysis from VirusTotal' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      analysisData = await response.json();
+      
+    } else if (url) {
       // First, submit URL for scanning using v3 API
       const formData = new FormData();
       formData.append('url', url);
