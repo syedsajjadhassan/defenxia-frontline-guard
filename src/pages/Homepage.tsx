@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { ProgressCircle } from "@/components/ui/progress-circle";
 import { QuickActionButton } from "@/components/quick-action-button";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/supabase-client";
 import { useState } from "react";
 import { toast } from "sonner";
 import { 
@@ -40,11 +40,9 @@ const Homepage = () => {
   const handleComprehensiveScan = async () => {
     setIsScanning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('comprehensive-scan', {
-        body: { 
-          target: window.location.hostname || 'current-device',
-          scanType: 'device'
-        }
+      const { data, error } = await invokeEdgeFunction('comprehensive-scan', {
+        target: window.location.hostname || 'current-device',
+        scanType: 'device'
       });
 
       if (error) {
