@@ -27,9 +27,7 @@ const quickActions = [
   { icon: Database, label: "Data Breach Security", path: "/data-breach" },
   { icon: Settings, label: "App Permissions Check", path: "/app-permissions" },
   { icon: Brain, label: "AI Analysis", path: "/ai-analysis" },
-  { icon: ShieldCheck, label: "Firewall", path: "/firewall" },
-  { icon: Bug, label: "Antivirus", path: "/antivirus" },
-  { icon: Search, label: "VirusTotal Scanner", path: "/virus-scanner" },
+  { icon: Search, label: "Scan Files", path: "/virus-scanner" },
   { icon: AlertTriangle, label: "IP Security Check", path: "/ip-security-check" },
 ];
 
