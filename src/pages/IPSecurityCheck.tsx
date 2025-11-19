@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/supabase-client";
 import { toast } from "sonner";
 import { Shield, AlertTriangle, CheckCircle, Globe, MapPin } from "lucide-react";
 
@@ -35,8 +35,8 @@ const IPSecurityCheck = () => {
 
     setIsChecking(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ip-security-check', {
-        body: { ipAddress: ipAddress.trim() }
+      const { data, error } = await invokeEdgeFunction('ip-security-check', {
+        ipAddress: ipAddress.trim()
       });
 
       if (error) {
