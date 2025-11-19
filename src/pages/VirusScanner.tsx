@@ -63,13 +63,22 @@ const VirusScanner = () => {
 
     setIsScanning(true);
     try {
-      // Calculate file hash
-      toast.info('Calculating file hash...');
-      const fileHash = await calculateFileHash(selectedFile);
+      // Convert file to base64
+      toast.info('Preparing file for upload...');
+      const fileBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(selectedFile);
+      });
       
-      // Scan using VirusTotal API
+      // Upload and scan using VirusTotal API
+      toast.info('Uploading file to VirusTotal...');
       const { data, error } = await invokeEdgeFunction('virus-scan', {
-        fileHash: fileHash,
+        fileContent: fileBase64,
         fileName: selectedFile.name
       });
 
