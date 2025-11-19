@@ -32,9 +32,15 @@ const VirusScanner = () => {
       return;
     }
 
-    // Normalize URL by adding https:// if missing protocol
-    if (scanType === 'url' && target && !target.match(/^https?:\/\//i)) {
-      target = `https://${target}`;
+    // Handle defanged URLs and normalize URL format
+    if (scanType === 'url' && target) {
+      // Refang defanged URLs (hxxp:// -> http://, hxxps:// -> https://)
+      target = target.replace(/^hxxp:\/\//i, 'http://').replace(/^hxxps:\/\//i, 'https://');
+      
+      // Add https:// if no protocol is present
+      if (!target.match(/^https?:\/\//i)) {
+        target = `https://${target}`;
+      }
     }
 
     setIsScanning(true);
