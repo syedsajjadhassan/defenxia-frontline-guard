@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Settings as SettingsIcon, Bell, Moon, Globe, Shield, Smartphone, Volume2 } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Moon, Globe, Shield, Smartphone, Volume2, Zap } from "lucide-react";
+import { useSimulation } from "@/contexts/SimulationContext";
 
 interface SettingItem {
   id: string;
@@ -12,6 +13,7 @@ interface SettingItem {
 }
 
 const Settings = () => {
+  const { isSimulating, setIsSimulating } = useSimulation();
   const [settings, setSettings] = useState<SettingItem[]>([
     {
       id: "notifications",
@@ -74,6 +76,24 @@ const Settings = () => {
           <p className="text-muted-foreground">
             Customize your Defenxia security preferences
           </p>
+        </div>
+
+        {/* Simulate Attack */}
+        <div className="glass-card p-6 rounded-2xl mb-6 animate-fade-in border border-warning/30">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-warning/10">
+            <div className="flex items-center gap-4 flex-1">
+              <Zap className="h-5 w-5 text-warning" />
+              <div className="flex-1">
+                <h3 className="font-medium text-foreground">Simulate Attack</h3>
+                <p className="text-sm text-muted-foreground">Trigger fake Scam SMS & Screen Share alert for demo</p>
+              </div>
+            </div>
+            <Switch
+              checked={isSimulating}
+              onCheckedChange={setIsSimulating}
+              className="data-[state=checked]:bg-warning"
+            />
+          </div>
         </div>
 
         {/* Settings List */}
