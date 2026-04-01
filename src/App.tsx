@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "./components/layout/header";
 import { Footer } from "./components/layout/footer";
+import { SimulationProvider, useSimulation } from "./contexts/SimulationContext";
 import Homepage from "./pages/Homepage";
 import Scanning from "./pages/Scanning";
 import QRScanner from "./pages/QRScanner";
@@ -14,14 +15,44 @@ import WiFiSecurity from "./pages/WiFiSecurity";
 import ReportAnalysis from "./pages/ReportAnalysis";
 import DataBreach from "./pages/DataBreach";
 import AppPermissions from "./pages/AppPermissions";
-import AIAnalysis from "./pages/AIAnalysis";
-import Firewall from "./pages/Firewall";
-import Antivirus from "./pages/Antivirus";
+import AISMSShield from "./pages/AISMSShield";
+import AntiScamKillSwitch from "./pages/AntiScamKillSwitch";
+import CyberSanchaarShield from "./pages/CyberSanchaarShield";
 import VirusScanner from "./pages/VirusScanner";
 import IPSecurityCheck from "./pages/IPSecurityCheck";
 import NotFound from "./pages/NotFound";
+import { SimulateAttackPanel } from "./components/SimulateAttackPanel";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const { isSimulating } = useSimulation();
+
+  return (
+    <div className="min-h-screen bg-background pb-16">
+      {isSimulating && <SimulateAttackPanel />}
+      <Routes>
+        <Route path="/" element={<><Header /><Homepage /><Footer /></>} />
+        <Route path="/scanning" element={<><Header /><Scanning /><Footer /></>} />
+        <Route path="/qr-scanner" element={<><Header /><QRScanner /><Footer /></>} />
+        <Route path="/website-scanner" element={<><Header /><WebsiteScanner /><Footer /></>} />
+        <Route path="/settings" element={<><Header /><Settings /><Footer /></>} />
+        <Route path="/wifi-security" element={<><Header /><WiFiSecurity /><Footer /></>} />
+        <Route path="/report-analysis" element={<><Header /><ReportAnalysis /><Footer /></>} />
+        <Route path="/data-breach" element={<><Header /><DataBreach /><Footer /></>} />
+        <Route path="/app-permissions" element={<><Header /><AppPermissions /><Footer /></>} />
+        <Route path="/ai-sms-shield" element={<><Header /><AISMSShield /><Footer /></>} />
+        <Route path="/anti-scam-kill-switch" element={<><Header /><AntiScamKillSwitch /><Footer /></>} />
+        <Route path="/cyber-sanchaar-shield" element={<><Header /><CyberSanchaarShield /><Footer /></>} />
+        <Route path="/virus-scanner" element={<><Header /><VirusScanner /><Footer /></>} />
+        <Route path="/ip-security-check" element={<><Header /><IPSecurityCheck /><Footer /></>} />
+        {/* Legacy routes kept for backward compat */}
+        <Route path="/ai-analysis" element={<><Header /><AISMSShield /><Footer /></>} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -29,109 +60,9 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <div className="min-h-screen bg-background pb-16">
-          <Routes>
-            <Route path="/" element={
-              <>
-                <Header />
-                <Homepage />
-                <Footer />
-              </>
-            } />
-            <Route path="/scanning" element={
-              <>
-                <Header />
-                <Scanning />
-                <Footer />
-              </>
-            } />
-            <Route path="/qr-scanner" element={
-              <>
-                <Header />
-                <QRScanner />
-                <Footer />
-              </>
-            } />
-            <Route path="/website-scanner" element={
-              <>
-                <Header />
-                <WebsiteScanner />
-                <Footer />
-              </>
-            } />
-            <Route path="/settings" element={
-              <>
-                <Header />
-                <Settings />
-                <Footer />
-              </>
-            } />
-            <Route path="/wifi-security" element={
-              <>
-                <Header />
-                <WiFiSecurity />
-                <Footer />
-              </>
-            } />
-            <Route path="/report-analysis" element={
-              <>
-                <Header />
-                <ReportAnalysis />
-                <Footer />
-              </>
-            } />
-            <Route path="/data-breach" element={
-              <>
-                <Header />
-                <DataBreach />
-                <Footer />
-              </>
-            } />
-            <Route path="/app-permissions" element={
-              <>
-                <Header />
-                <AppPermissions />
-                <Footer />
-              </>
-            } />
-            <Route path="/ai-analysis" element={
-              <>
-                <Header />
-                <AIAnalysis />
-                <Footer />
-              </>
-            } />
-            <Route path="/firewall" element={
-              <>
-                <Header />
-                <Firewall />
-                <Footer />
-              </>
-            } />
-            <Route path="/antivirus" element={
-              <>
-                <Header />
-                <Antivirus />
-                <Footer />
-              </>
-            } />
-            <Route path="/virus-scanner" element={
-              <>
-                <Header />
-                <VirusScanner />
-                <Footer />
-              </>
-            } />
-            <Route path="/ip-security-check" element={
-              <>
-                <Header />
-                <IPSecurityCheck />
-                <Footer />
-              </>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
+        <SimulationProvider>
+          <AppContent />
+        </SimulationProvider>
       </TooltipProvider>
     </BrowserRouter>
   </QueryClientProvider>
