@@ -13,6 +13,7 @@ interface SettingItem {
 }
 
 const Settings = () => {
+  const { isSimulating, setIsSimulating } = useSimulation();
   const [settings, setSettings] = useState<SettingItem[]>([
     {
       id: "notifications",
