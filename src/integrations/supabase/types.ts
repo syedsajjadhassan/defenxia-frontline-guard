@@ -284,6 +284,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_threats: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          session_id: string | null
+          severity: string
+          type: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          severity?: string
+          type: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          severity?: string
+          type?: string
+        }
+        Relationships: []
+      }
       virus_scan_results: {
         Row: {
           analysis_result: Json | null
