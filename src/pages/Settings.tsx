@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Settings as SettingsIcon, Bell, Moon, Globe, Shield, Smartphone, Volume2 } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Moon, Globe, Shield, Smartphone, Volume2, Zap } from "lucide-react";
+import { useSimulation } from "@/contexts/SimulationContext";
 
 interface SettingItem {
   id: string;
