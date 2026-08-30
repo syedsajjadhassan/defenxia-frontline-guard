@@ -86,6 +86,126 @@ export type Database = {
         }
         Relationships: []
       }
+      banking_apps: {
+        Row: {
+          created_at: string
+          display_name: string
+          enabled: boolean
+          id: string
+          package_name: string
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          enabled?: boolean
+          id?: string
+          package_name: string
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          enabled?: boolean
+          id?: string
+          package_name?: string
+          session_id?: string | null
+        }
+        Relationships: []
+      }
+      cyber_help_resources: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          phone: string | null
+          title: string
+          website: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          title: string
+          website?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          title?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      cyber_news_cache: {
+        Row: {
+          country: string | null
+          created_at: string
+          id: string
+          published_at: string | null
+          region: string
+          severity: string
+          source: string | null
+          summary: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          region?: string
+          severity?: string
+          source?: string | null
+          summary?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          region?: string
+          severity?: string
+          source?: string | null
+          summary?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      cyber_news_queries: {
+        Row: {
+          created_at: string
+          id: string
+          query: string
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          query: string
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          query?: string
+          session_id?: string | null
+        }
+        Relationships: []
+      }
       data_breach_results: {
         Row: {
           analysis_result: Json | null
@@ -281,6 +401,45 @@ export type Database = {
           request_count?: number
           session_id?: string
           window_start?: string
+        }
+        Relationships: []
+      }
+      secure_sessions: {
+        Row: {
+          app_name: string
+          created_at: string
+          duration_seconds: number | null
+          expires_at: string | null
+          id: string
+          package_name: string | null
+          rfid_uid: string | null
+          session_id: string | null
+          started_at: string
+          verification_status: string
+        }
+        Insert: {
+          app_name: string
+          created_at?: string
+          duration_seconds?: number | null
+          expires_at?: string | null
+          id?: string
+          package_name?: string | null
+          rfid_uid?: string | null
+          session_id?: string | null
+          started_at?: string
+          verification_status?: string
+        }
+        Update: {
+          app_name?: string
+          created_at?: string
+          duration_seconds?: number | null
+          expires_at?: string | null
+          id?: string
+          package_name?: string | null
+          rfid_uid?: string | null
+          session_id?: string | null
+          started_at?: string
+          verification_status?: string
         }
         Relationships: []
       }
