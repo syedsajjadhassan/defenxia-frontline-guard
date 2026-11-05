@@ -1,176 +1,283 @@
 import { useState } from "react";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Settings as SettingsIcon, Bell, Moon, Globe, Shield, Smartphone, Volume2, Zap } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
+import {
+  IconBell,
+  IconGear,
+  IconShieldCheck,
+  IconActivity,
+  IconLock,
+  IconGlobe,
+  IconArrow,
+} from "@/components/mockup/icons";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSimulation } from "@/contexts/SimulationContext";
+import { isDesktopApp } from "@/services/desktopBridge";
 
+type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
+
+/**
+ * Settings — every preference toggle, the Simulate Attack demo switch,
+ * app information and the danger-zone actions, rendered in the Aurora
+ * visual language (serif headline, glass cards, pill switches).
+ */
 interface SettingItem {
   id: string;
   label: string;
   description: string;
-  icon: React.ElementType;
+  icon: IconComponent;
   enabled: boolean;
 }
 
 const Settings = () => {
   const { isSimulating, setIsSimulating } = useSimulation();
+  const { user, signOut, openAuthModal } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [settings, setSettings] = useState<SettingItem[]>([
     {
       id: "notifications",
       label: "Enable Notifications",
       description: "Receive alerts about security threats and scan results",
-      icon: Bell,
-      enabled: true
+      icon: IconBell,
+      enabled: true,
     },
     {
       id: "darkMode",
       label: "Dark Mode",
       description: "Use dark theme for better viewing in low light",
-      icon: Moon,
-      enabled: true
+      icon: IconGear,
+      enabled: true,
     },
     {
       id: "autoScan",
       label: "Auto Security Scan",
       description: "Automatically run security scans daily",
-      icon: Shield,
-      enabled: false
+      icon: IconShieldCheck,
+      enabled: false,
     },
     {
       id: "soundAlerts",
       label: "Sound Alerts",
       description: "Play sound notifications for security alerts",
-      icon: Volume2,
-      enabled: true
+      icon: IconActivity,
+      enabled: true,
     },
     {
       id: "realTimeProtection",
       label: "Real-time Protection",
       description: "Monitor system activity continuously",
-      icon: Smartphone,
-      enabled: true
+      icon: IconLock,
+      enabled: true,
     },
     {
       id: "language",
       label: "Language",
       description: "English (US)",
-      icon: Globe,
-      enabled: true
-    }
+      icon: IconGlobe,
+      enabled: true,
+    },
   ]);
 
   const toggleSetting = (id: string) => {
-    setSettings(prev => prev.map(setting => 
-      setting.id === id 
-        ? { ...setting, enabled: !setting.enabled }
-        : setting
-    ));
+    setSettings((prev) =>
+      prev.map((setting) =>
+        setting.id === id
+          ? { ...setting, enabled: !setting.enabled }
+          : setting
+      )
+    );
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto max-w-2xl">
-        <div className="text-center mb-8 animate-fade-in">
-          <SettingsIcon className="h-16 w-16 text-primary mx-auto mb-4" />
-          <h1 className="text-3xl font-bold mb-2">Settings</h1>
-          <p className="text-muted-foreground">
-            Customize your Defenxia security preferences
-          </p>
-        </div>
+    <div className="tpage">
+      <span className="eyebrow">SETTINGS</span>
+      <h1 className="serif">Your controls.</h1>
+      <p className="tsub">Customize your Defenxia security preferences.</p>
 
-        {/* Simulate Attack */}
-        <div className="glass-card p-6 rounded-2xl mb-6 animate-fade-in border border-warning/30">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-warning/10">
-            <div className="flex items-center gap-4 flex-1">
-              <Zap className="h-5 w-5 text-warning" />
-              <div className="flex-1">
-                <h3 className="font-medium text-foreground">Simulate Attack</h3>
-                <p className="text-sm text-muted-foreground">Trigger fake Scam SMS & Screen Share alert for demo</p>
+      {/* Account */}
+      <div className="glass tcard">
+        <p className="clabel">Account</p>
+        {user ? (
+          <div className="trow" style={{ borderBottom: "none" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: "var(--ink)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {user.email}
+              </div>
+              <div
+                style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 4 }}
+              >
+                Signed in
               </div>
             </div>
-            <Switch
-              checked={isSimulating}
-              onCheckedChange={setIsSimulating}
-              className="data-[state=checked]:bg-warning"
+            <button
+              type="button"
+              className="btn-ghost"
+              style={{ minHeight: 44, padding: "10px 18px" }}
+              disabled={isSigningOut}
+              onClick={async () => {
+                setIsSigningOut(true);
+                await signOut();
+                setIsSigningOut(false);
+              }}
+            >
+              {isSigningOut ? "Signing out…" : "Log out"}
+            </button>
+          </div>
+        ) : (
+          <div className="trow" style={{ borderBottom: "none" }}>
+            <div style={{ flex: 1 }}>
+              <div
+                style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)" }}
+              >
+                You&apos;re signed out
+              </div>
+              <div
+                style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 4 }}
+              >
+                Sign in to sync your protection
+              </div>
+            </div>
+            <button
+              type="button"
+              className="btn-ghost"
+              style={{ minHeight: 44, padding: "10px 18px" }}
+              onClick={openAuthModal}
+            >
+              Sign in
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Simulate Attack — demo-only; hidden in the Windows desktop build */}
+      {!isDesktopApp() && (
+        <div className="glass tcard">
+          <div className="trow" style={{ borderBottom: "none" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "#f5a524" }}>
+                Simulate Attack
+              </div>
+              <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 6 }}>
+                Trigger fake Scam SMS &amp; Screen Share alert for demo
+              </div>
+            </div>
+            <button
+              type="button"
+              className="switch"
+              aria-checked={isSimulating}
+              aria-label="Toggle attack simulation"
+              onClick={() => setIsSimulating(!isSimulating)}
             />
           </div>
         </div>
+      )}
 
-        {/* Settings List */}
-        <div className="glass-card p-6 rounded-2xl mb-6 animate-fade-in">
-          <div className="space-y-6">
-            {settings.map((setting, index) => (
+      {/* Settings list */}
+      <div className="glass tcard">
+        <p className="clabel">Preferences</p>
+        {settings.map((setting) => {
+          const Icon = setting.icon;
+          return (
+            <div key={setting.id} className="trow">
               <div
-                key={setting.id}
-                className="flex items-center justify-between p-4 rounded-lg hover:bg-secondary/30 transition-colors duration-200"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className="ticon"
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 15,
+                  flexShrink: 0,
+                }}
               >
-                <div className="flex items-center gap-4 flex-1">
-                  <setting.icon className="h-5 w-5 text-primary" />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-foreground">{setting.label}</h3>
-                    <p className="text-sm text-muted-foreground">{setting.description}</p>
-                  </div>
-                </div>
-                
-                {setting.id !== "language" ? (
-                  <Switch
-                    checked={setting.enabled}
-                    onCheckedChange={() => toggleSetting(setting.id)}
-                    className="data-[state=checked]:bg-primary"
-                  />
-                ) : (
-                  <Button variant="outline" size="sm" className="ml-4">
-                    Change
-                  </Button>
-                )}
+                <Icon style={{ width: 24, height: 24 }} />
               </div>
-            ))}
-          </div>
-        </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)" }}
+                >
+                  {setting.label}
+                </div>
+                <div
+                  style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 4 }}
+                >
+                  {setting.description}
+                </div>
+              </div>
+              {setting.id !== "language" ? (
+                <button
+                  type="button"
+                  className="switch"
+                  aria-checked={setting.enabled}
+                  aria-label={setting.label}
+                  onClick={() => toggleSetting(setting.id)}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  style={{ minHeight: 44, padding: "10px 18px" }}
+                >
+                  Change
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-        {/* App Information */}
-        <div className="glass-card p-6 rounded-2xl animate-fade-in">
-          <h3 className="font-semibold mb-4">App Information</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Version</span>
-              <span>2.1.0</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Last Update</span>
-              <span>Dec 22, 2024</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Database Version</span>
-              <span>1.8.3</span>
-            </div>
-          </div>
-          
-          <div className="flex gap-3 mt-6">
-            <Button variant="outline" className="flex-1">
-              Check for Updates
-            </Button>
-            <Button variant="outline" className="flex-1">
-              Privacy Policy
-            </Button>
-          </div>
+      {/* App information */}
+      <div className="glass tcard">
+        <p className="clabel">App information</p>
+        <div className="kv">
+          <span className="k">Version</span>
+          <span className="v">2.1.0</span>
         </div>
+        <div className="kv">
+          <span className="k">Last update</span>
+          <span className="v">Dec 22, 2024</span>
+        </div>
+        <div className="kv">
+          <span className="k">Database version</span>
+          <span className="v">1.8.3</span>
+        </div>
+        <div style={{ display: "flex", gap: 12, marginTop: 18 }}>
+          <button type="button" className="btn-ghost" style={{ flex: 1 }}>
+            Check for Updates
+          </button>
+          <button type="button" className="btn-ghost" style={{ flex: 1 }}>
+            Privacy Policy
+          </button>
+        </div>
+      </div>
 
-        {/* Reset Section */}
-        <div className="glass-card p-6 rounded-2xl mt-6 animate-fade-in">
-          <h3 className="font-semibold mb-4 text-destructive">Danger Zone</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            These actions cannot be undone. Please proceed with caution.
-          </p>
-          <div className="flex gap-3">
-            <Button variant="destructive" className="flex-1">
-              Reset All Settings
-            </Button>
-            <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">
-              Clear All Data
-            </Button>
-          </div>
+      {/* Danger zone */}
+      <div className="glass tcard danger">
+        <p className="clabel" style={{ color: "#ff6b6b" }}>
+          Danger zone
+        </p>
+        <h3 style={{ color: "#ff6b6b" }}>Start over.</h3>
+        <p>These actions cannot be undone. Please proceed with caution.</p>
+        <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+          <button
+            type="button"
+            className="cta"
+            style={{ flex: 1, marginTop: 0 }}
+          >
+            <span style={{ fontSize: 16 }}>Reset All Settings</span>
+            <span className="cta-arrow" style={{ width: 44, height: 44 }}>
+              <IconArrow />
+            </span>
+          </button>
+          <button type="button" className="btn-ghost" style={{ flex: 1 }}>
+            Clear All Data
+          </button>
         </div>
       </div>
     </div>

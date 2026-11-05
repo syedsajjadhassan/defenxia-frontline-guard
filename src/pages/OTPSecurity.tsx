@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Key, Shield, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { IconKeyRound, IconShieldCheck, IconArrow } from "@/components/mockup/icons";
 
+/**
+ * OTP Security — generate / verify logic preserved,
+ * re-skinned in the Aurora mockup's visual language.
+ */
 const OTPSecurity = () => {
   const [generatedOTP, setGeneratedOTP] = useState("");
   const [enteredOTP, setEnteredOTP] = useState("");
@@ -24,91 +25,101 @@ const OTPSecurity = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-4">OTP Security</h1>
-          <p className="text-muted-foreground">
-            Generate and verify one-time passwords for enhanced security
+    <div className="tpage">
+      <span className="eyebrow">OTP SECURITY</span>
+      <h1 className="serif">One-time codes.</h1>
+      <p className="tsub">Generate and verify one-time passwords for enhanced security.</p>
+
+      <div className="glass tcard">
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+          <div className="ticon" style={{ width: 54, height: 54, borderRadius: 17 }}>
+            <IconKeyRound />
+          </div>
+          <h3 style={{ margin: 0 }}>Generate New OTP</h3>
+        </div>
+
+        <button type="button" onClick={generateOTP} className="cta" style={{ width: "100%", marginTop: 0 }}>
+          <span>Generate New OTP</span>
+          <span className="cta-arrow">
+            <IconArrow />
+          </span>
+        </button>
+
+        {generatedOTP && (
+          <div
+            className="glass animate-fade-in"
+            style={{ borderRadius: 20, padding: 22, textAlign: "center", marginTop: 18 }}
+          >
+            <p className="clabel">Your OTP code</p>
+            <div
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 40,
+                fontWeight: 600,
+                letterSpacing: ".15em",
+                color: "var(--ember)",
+              }}
+            >
+              {generatedOTP}
+            </div>
+            <p style={{ fontSize: 12, marginTop: 10 }}>This code expires in 5 minutes</p>
+          </div>
+        )}
+      </div>
+
+      <div className="glass tcard">
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+          <div className="ticon" style={{ width: 54, height: 54, borderRadius: 17 }}>
+            <IconShieldCheck />
+          </div>
+          <h3 style={{ margin: 0 }}>Verify OTP</h3>
+        </div>
+
+        <label className="flabel" htmlFor="otp-input">6-digit code</label>
+        <input
+          id="otp-input"
+          type="text"
+          placeholder="Enter 6-digit OTP"
+          value={enteredOTP}
+          onChange={(e) => setEnteredOTP(e.target.value)}
+          maxLength={6}
+          className="field"
+          style={{
+            textAlign: "center",
+            fontSize: 20,
+            fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: ".2em",
+          }}
+        />
+        <button
+          type="button"
+          onClick={verifyOTP}
+          className="cta"
+          style={{ width: "100%" }}
+          disabled={enteredOTP.length !== 6}
+        >
+          <span>Verify OTP</span>
+          <span className="cta-arrow">
+            <IconArrow />
+          </span>
+        </button>
+
+        {verificationResult && (
+          <p
+            className="animate-fade-in"
+            style={{
+              textAlign: "center",
+              marginTop: 18,
+              fontSize: 15,
+              fontWeight: 600,
+              color: verificationResult === "success" ? "#8fd0a8" : "#ff6b6b",
+            }}
+          >
+            {verificationResult === "success"
+              ? "OTP verified successfully."
+              : "Invalid OTP. Please try again."}
           </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Generate OTP Section */}
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="text-primary" size={24} />
-                Generate New OTP
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center">
-                <Button 
-                  onClick={generateOTP} 
-                  className="glow-button text-white font-semibold px-8 py-4"
-                >
-                  <RefreshCw className="mr-2" size={20} />
-                  Generate New OTP
-                </Button>
-              </div>
-              
-              {generatedOTP && (
-                <div className="text-center p-6 glass-card rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">Your OTP Code:</p>
-                  <div className="text-4xl font-mono font-bold text-primary tracking-wider">
-                    {generatedOTP}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    This code expires in 5 minutes
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Verify OTP Section */}
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="text-primary" size={24} />
-                Verify OTP
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <Input
-                  type="text"
-                  placeholder="Enter 6-digit OTP"
-                  value={enteredOTP}
-                  onChange={(e) => setEnteredOTP(e.target.value)}
-                  maxLength={6}
-                  className="text-center text-lg font-mono"
-                />
-                <Button 
-                  onClick={verifyOTP} 
-                  className="w-full"
-                  disabled={enteredOTP.length !== 6}
-                >
-                  Verify OTP
-                </Button>
-              </div>
-
-              {verificationResult && (
-                <div className={`p-4 rounded-lg text-center ${
-                  verificationResult === "success" 
-                    ? "bg-green-500/20 text-green-400 border border-green-500/30" 
-                    : "bg-red-500/20 text-red-400 border border-red-500/30"
-                }`}>
-                  {verificationResult === "success" 
-                    ? "✓ OTP Verified Successfully!" 
-                    : "✗ Invalid OTP. Please try again."
-                  }
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        )}
       </div>
     </div>
   );

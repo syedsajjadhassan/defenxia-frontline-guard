@@ -24,6 +24,32 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				ink: '#f5f3ff',
+				mist: '#b9b0d9',
+				faint: '#8f86b3',
+				base: {
+					0: '#060609',
+					1: '#0a0a12',
+					2: '#101018',
+				},
+				ember: {
+					DEFAULT: '#f9613f',
+					deep: '#4a1f0e',
+				},
+				magenta: {
+					DEFAULT: '#e8357b',
+					bright: '#d63a72',
+					deep: '#54183a',
+				},
+				violet: {
+					DEFAULT: '#8b3df0',
+					deep: '#241040',
+				},
+				lav: {
+					DEFAULT: '#cdc2f7',
+					bright: '#e4dcfc',
+					soft: '#d7cdfa',
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))',
@@ -78,6 +104,11 @@ export default {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			fontFamily: {
+				serif: ["'Cormorant Garamond'", 'Georgia', 'serif'],
+				sans: ["'Inter'", 'system-ui', '-apple-system', 'sans-serif'],
+				mono: ["'JetBrains Mono'", 'ui-monospace', 'monospace'],
 			},
 			keyframes: {
 				'accordion-down': {

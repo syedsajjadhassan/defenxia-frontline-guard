@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, PhoneOff, AlertTriangle, ShieldCheck, Radio } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { IconPhoneShield, IconShieldCheck, IconArrow } from "@/components/mockup/icons";
 import { insertWithSession } from "@/lib/supabase-client";
 import { toast } from "sonner";
 
@@ -51,127 +49,120 @@ const CyberSanchaarShield = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Persistent Red Flash Warning Overlay */}
+    <div className="tpage" style={{ position: "relative" }}>
+      {/* Persistent warning overlay */}
       {showWarning && (
-        <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6 transition-colors duration-300 ${
-          flashOn ? 'bg-destructive/95' : 'bg-destructive/70'
-        }`}>
-          <div className="animate-pulse">
-            <AlertTriangle className="h-24 w-24 text-white" />
+        <div
+          className="animate-fade-in"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: flashOn ? "rgba(120,22,40,.96)" : "rgba(90,14,28,.9)",
+            transition: "background .3s ease",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 18,
+            padding: 32,
+            textAlign: "center",
+          }}
+        >
+          <div className="ticon animate-pulse-aurora" style={{ width: 96, height: 96, borderRadius: 30, margin: "0 auto" }}>
+            <IconShieldCheck />
           </div>
-          <h1 className="text-4xl font-bold text-white text-center px-4 leading-tight">
-            ⚠️ DO NOT SHARE
+          <h1 className="serif" style={{ fontSize: 52, margin: 0, color: "#fff" }}>
+            Do Not Share.
           </h1>
-          <h2 className="text-3xl font-bold text-white text-center px-4">
-            PIN / OTP ON CALL
+          <h2 className="serif" style={{ fontSize: 34, margin: 0, color: "#fff" }}>
+            PIN / OTP on call.
           </h2>
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mx-6 max-w-sm">
-            <p className="text-white text-center text-sm leading-relaxed">
+          <div className="glass" style={{ borderRadius: 24, padding: "20px 22px", maxWidth: 340 }}>
+            <p style={{ fontSize: 14, lineHeight: 1.7, margin: 0, color: "#fff" }}>
               A phone call is active while you are using a banking application.
-              <strong className="block mt-2 text-lg">
+              <strong style={{ display: "block", marginTop: 8, fontSize: 16 }}>
                 No bank employee will ever ask for your PIN, OTP, or CVV.
               </strong>
             </p>
           </div>
-          <div className="flex items-center gap-2 text-white/80 text-xs">
-            <Radio className="h-4 w-4 animate-pulse" />
-            <span>Capacitor: PhoneStateListener active</span>
-          </div>
-          <Button
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,.75)", margin: 0 }}>
+            Capacitor: PhoneStateListener active
+          </p>
+          <button
+            type="button"
             onClick={dismissWarning}
-            variant="outline"
-            className="mt-4 border-white/50 text-white hover:bg-white/20 bg-transparent"
+            className="btn-ghost"
+            style={{ marginTop: 8, color: "#fff", borderColor: "rgba(255,255,255,.4)" }}
           >
             I Understand - Dismiss Warning
-          </Button>
+          </button>
         </div>
       )}
 
-      <div className="container mx-auto max-w-4xl p-4 space-y-6">
-        <div className="border-b border-border pb-4">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Phone className="h-8 w-8 text-primary" />
-            Cyber-Sanchaar Shield
-          </h1>
-          <p className="text-muted-foreground">
-            Detects phone calls during banking sessions & warns against OTP/PIN sharing
-          </p>
-        </div>
+      <span className="eyebrow">CYBER-SANCHAAR SHIELD</span>
+      <h1 className="serif">Call Guard.</h1>
+      <p className="tsub">Detects phone calls during banking sessions &amp; warns against OTP/PIN sharing.</p>
 
-        {/* Monitoring Toggle */}
-        <div className="glass-card rounded-xl p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold">Call Monitoring</h3>
-              <p className="text-sm text-muted-foreground">
-                Monitor for active phone calls during banking
-              </p>
-            </div>
-            <Switch
-              checked={isMonitoring}
-              onCheckedChange={setIsMonitoring}
-              className="scale-125"
-            />
+      {/* Monitoring Toggle */}
+      <div className="glass tcard">
+        <p className="clabel">Call monitoring</p>
+        <div className="trow" style={{ borderBottom: "none", paddingTop: 4 }}>
+          <div className="ticon" style={{ width: 56, height: 56, borderRadius: 18, flexShrink: 0 }}>
+            <IconPhoneShield />
           </div>
-
-          <div className={`flex items-center gap-3 p-4 rounded-lg ${
-            isMonitoring ? 'bg-success/10 border border-success/30' : 'bg-secondary/50 border border-border'
-          }`}>
-            {isMonitoring ? (
-              <>
-                <ShieldCheck className="h-6 w-6 text-success" />
-                <div>
-                  <p className="font-semibold text-success">Monitoring Active</p>
-                  <p className="text-xs text-muted-foreground">Will alert if a phone call is detected</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <PhoneOff className="h-6 w-6 text-muted-foreground" />
-                <div>
-                  <p className="font-semibold">Monitoring Off</p>
-                  <p className="text-xs text-muted-foreground">Enable to detect calls during banking</p>
-                </div>
-              </>
-            )}
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 700, fontSize: 16, margin: "0 0 4px", color: "var(--ink)" }}>Call Monitoring</p>
+            <p style={{ fontSize: 13, margin: 0 }}>Monitor for active phone calls during banking.</p>
+          </div>
+          <button
+            type="button"
+            className="switch"
+            aria-checked={isMonitoring}
+            aria-label="Toggle call monitoring"
+            onClick={() => setIsMonitoring((v) => !v)}
+            style={{ transform: "scale(1.3)", transformOrigin: "right center" }}
+          />
+        </div>
+        <div className="glass" style={{ borderRadius: 20, padding: "16px 18px", marginTop: 18, display: "flex", alignItems: "center", gap: 14 }}>
+          <span style={{ fontSize: 20, color: isMonitoring ? "#8fd0a8" : "var(--faint)" }}>
+            {isMonitoring ? "◉" : "○"}
+          </span>
+          <div>
+            <p className={isMonitoring ? "ok" : ""} style={{ fontWeight: 700, fontSize: 15, margin: "0 0 2px", color: isMonitoring ? undefined : "var(--ink)" }}>
+              {isMonitoring ? "Monitoring Active" : "Monitoring Off"}
+            </p>
+            <p style={{ fontSize: 13, margin: 0 }}>
+              {isMonitoring ? "Will alert if a phone call is detected." : "Enable to detect calls during banking."}
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Simulate Button */}
-        <div className="glass-card rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-semibold">Test the Shield</h3>
-          <p className="text-sm text-muted-foreground">
-            Simulate a phone call detection while using a banking app to see the warning in action.
-          </p>
-          <Button
-            onClick={simulateCallDetected}
-            className="w-full glow-button text-white"
-            disabled={showWarning}
-          >
-            <Phone className="mr-2 h-4 w-4" />
-            Simulate Call During Banking
-          </Button>
-          <p className="text-xs text-muted-foreground">
-            📱 Capacitor: Uses PhoneStateListener to detect real call state
-          </p>
+      {/* Simulate */}
+      <div className="glass tcard">
+        <p className="clabel">Test the shield</p>
+        <h3>Simulate a Call.</h3>
+        <p>Simulate a phone call detection while using a banking app to see the warning in action.</p>
+        <button type="button" onClick={simulateCallDetected} className="cta" style={{ width: "100%", opacity: showWarning ? 0.5 : 1 }} disabled={showWarning}>
+          <span>Simulate Call During Banking</span>
+          <span className="cta-arrow"><IconArrow /></span>
+        </button>
+        <p style={{ fontSize: 12, color: "var(--faint)", marginTop: 14, marginBottom: 0 }}>
+          Capacitor: Uses PhoneStateListener to detect real call state.
+        </p>
+      </div>
+
+      {/* Status */}
+      <div className="glass tcard">
+        <p className="clabel">Current status</p>
+        <div className="kv">
+          <span className="k">Phone state</span>
+          <span className={`v ${isOnCall ? "bad" : "ok"}`}>{isOnCall ? "ON CALL" : "Idle"}</span>
         </div>
-
-        {/* Status */}
-        <div className="glass-card rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-semibold">Current Status</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-secondary/30 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground">Phone State</p>
-              <p className={`font-bold ${isOnCall ? 'text-destructive' : 'text-success'}`}>
-                {isOnCall ? 'ON CALL' : 'Idle'}
-              </p>
-            </div>
-            <div className="p-3 bg-secondary/30 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground">Banking App</p>
-              <p className="font-bold text-success">Active</p>
-            </div>
-          </div>
+        <div className="kv">
+          <span className="k">Banking app</span>
+          <span className="v ok">Active</span>
         </div>
       </div>
     </div>

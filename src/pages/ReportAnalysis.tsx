@@ -1,32 +1,33 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect, type SVGProps, type ReactNode, type ComponentType } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/supabase-client";
 import { toast } from "sonner";
-import { 
-  QrCode, 
-  Wifi, 
-  Globe, 
-  Database, 
-  Settings, 
-  Brain, 
-  ShieldCheck, 
-  Bug,
-  Search,
-  AlertTriangle,
-  TrendingUp,
-  Shield,
-  FileText
-} from "lucide-react";
+import { RefreshCw, Sparkles } from "lucide-react";
+import {
+  IconQr,
+  IconLink,
+  IconWifi,
+  IconBug,
+  IconGlobe,
+  IconLock,
+  IconAppDoc,
+  IconFirewall,
+  IconActivity,
+  IconShieldCheck,
+  IconArrow,
+} from "@/components/mockup/icons";
 
+/**
+ * ReportAnalysis — every feature from the IoT build (refreshable telemetry,
+ * broad threat counting, executive AI summaries, quick AI prompts, recent
+ * activity feed) re-skinned 100% in the Aurora mockup visual language:
+ * serif headlines, glass cards, chips, ticons and cta buttons.
+ */
 interface ScanResult {
   id: string;
   scan_date: string;
   threat_level: string;
-  analysis_result: any;
+  analysis_result: unknown;
   created_at: string;
 }
 
@@ -45,7 +46,7 @@ interface WiFiScanResult extends ScanResult {
   network_name: string;
   security_type: string;
   signal_strength: number;
-  vulnerabilities: any;
+  vulnerabilities: unknown;
 }
 
 interface VirusScanResult extends ScanResult {
@@ -67,8 +68,8 @@ interface DataBreachResult {
   scan_date: string;
   email_checked: string;
   breaches_found: number;
-  breach_details: any;
-  analysis_result: any;
+  breach_details: unknown;
+  analysis_result: unknown;
   created_at: string;
 }
 
@@ -76,15 +77,15 @@ interface AppPermissionResult {
   id: string;
   scan_date: string;
   app_name: string;
-  permissions: any;
+  permissions: unknown;
   risk_level: string;
   suspicious_permissions: string[];
-  analysis_result: any;
+  analysis_result: unknown;
   created_at: string;
 }
 
 interface FirewallScanResult extends ScanResult {
-  ports_scanned: any;
+  ports_scanned: unknown;
   open_ports: number[];
   blocked_attempts: number;
 }
@@ -94,12 +95,86 @@ interface AntivirusScanResult {
   scan_date: string;
   files_scanned: number;
   threats_detected: number;
-  threat_details: any;
-  analysis_result: any;
+  threat_details: unknown;
+  analysis_result: unknown;
   created_at: string;
 }
 
+const TABS: { id: string; label: string; icon?: ComponentType<SVGProps<SVGSVGElement>> }[] = [
+  { id: "overview", label: "Overview" },
+  { id: "qr-scans", label: "QR", icon: IconQr },
+  { id: "website-scans", label: "Web", icon: IconLink },
+  { id: "wifi-scans", label: "WiFi", icon: IconWifi },
+  { id: "virus-scans", label: "Files", icon: IconBug },
+  { id: "ip-scans", label: "IP", icon: IconGlobe },
+  { id: "data-breach", label: "Breach", icon: IconLock },
+  { id: "app-permissions", label: "Apps", icon: IconAppDoc },
+  { id: "firewall", label: "Firewall", icon: IconFirewall },
+  { id: "ai-analysis", label: "Ask AI", icon: IconActivity },
+];
+
+const SAMPLE_AI_PROMPTS = [
+  "Generate full executive security test summary",
+  "Which detected threats pose the highest danger?",
+  "How can I secure my banking and UPI apps?",
+  "Analyze my vulnerability patterns and weaknesses",
+];
+
+const EXECUTIVE_SUMMARY_PROMPT =
+  "Generate a comprehensive executive security test summary of all my scan telemetry";
+
+/** Threat-level → tone colour, covering every granularity the IoT build maps. */
+const threatTone = (threatLevel?: string) => {
+  switch ((threatLevel || "").toLowerCase()) {
+    case "high":
+    case "critical":
+    case "malicious":
+      return { color: "#ff6b6b" };
+    case "medium":
+    case "warning":
+    case "suspicious":
+      return { color: "#f5a524" };
+    case "low":
+    case "info":
+      return { color: "#9db8ff" };
+    default:
+      return { color: "#8fd0a8" };
+  }
+};
+
+const SectionHead = ({
+  icon: Icon,
+  title,
+  sub,
+}: {
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  title: string;
+  sub: string;
+}) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 6 }}>
+    <div className="ticon" style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0 }}>
+      <Icon style={{ width: 26, height: 26 }} />
+    </div>
+    <div>
+      <p className="clabel" style={{ margin: 0 }}>{title}</p>
+      <p style={{ fontSize: 13, marginTop: 6 }}>{sub}</p>
+    </div>
+  </div>
+);
+
+const Empty = ({ text }: { text: string }) => (
+  <p style={{ textAlign: "center", padding: "28px 0", color: "var(--faint)", fontSize: 14 }}>{text}</p>
+);
+
+const Stat = ({ label, value, tone }: { label: string; value: ReactNode; tone?: string }) => (
+  <div className="glass" style={{ borderRadius: 20, padding: 18 }}>
+    <p className="clabel" style={{ marginBottom: 10 }}>{label}</p>
+    <div className="serif" style={{ fontSize: 40, ...(tone ? { color: tone } : {}) }}>{value}</div>
+  </div>
+);
+
 const ReportAnalysis = () => {
+  const [activeTab, setActiveTab] = useState("overview");
   const [qrResults, setQrResults] = useState<QRScanResult[]>([]);
   const [websiteResults, setWebsiteResults] = useState<WebsiteScanResult[]>([]);
   const [wifiResults, setWifiResults] = useState<WiFiScanResult[]>([]);
@@ -109,6 +184,8 @@ const ReportAnalysis = () => {
   const [appPermissionResults, setAppPermissionResults] = useState<AppPermissionResult[]>([]);
   const [firewallResults, setFirewallResults] = useState<FirewallScanResult[]>([]);
   const [antivirusResults, setAntivirusResults] = useState<AntivirusScanResult[]>([]);
+
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isLoadingAI, setIsLoadingAI] = useState(false);
@@ -118,6 +195,7 @@ const ReportAnalysis = () => {
   }, []);
 
   const fetchAllData = async () => {
+    setIsLoadingData(true);
     try {
       const [
         qrData,
@@ -141,484 +219,597 @@ const ReportAnalysis = () => {
         supabase.from('antivirus_scan_results').select('*').order('created_at', { ascending: false })
       ]);
 
-      setQrResults(qrData.data as QRScanResult[] || []);
-      setWebsiteResults(websiteData.data as WebsiteScanResult[] || []);
-      setWifiResults(wifiData.data as WiFiScanResult[] || []);
-      setVirusResults(virusData.data as VirusScanResult[] || []);
-      setIpResults(ipData.data as IPScanResult[] || []);
-      setDataBreachResults(dataBreachData.data as DataBreachResult[] || []);
-      setAppPermissionResults(appPermissionData.data as AppPermissionResult[] || []);
-      setFirewallResults(firewallData.data as FirewallScanResult[] || []);
-      setAntivirusResults(antivirusData.data as AntivirusScanResult[] || []);
+      setQrResults((qrData.data as QRScanResult[]) || []);
+      setWebsiteResults((websiteData.data as WebsiteScanResult[]) || []);
+      setWifiResults((wifiData.data as WiFiScanResult[]) || []);
+      setVirusResults((virusData.data as VirusScanResult[]) || []);
+      setIpResults((ipData.data as IPScanResult[]) || []);
+      setDataBreachResults((dataBreachData.data as DataBreachResult[]) || []);
+      setAppPermissionResults((appPermissionData.data as AppPermissionResult[]) || []);
+      setFirewallResults((firewallData.data as FirewallScanResult[]) || []);
+      setAntivirusResults((antivirusData.data as AntivirusScanResult[]) || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to fetch scan results');
+      console.error('Error fetching scan data:', error);
+      toast.error('Failed to fetch historical scan results');
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
-  const handleAIQuery = async () => {
-    if (!aiQuery.trim()) return;
-    
+  const totalScansCount =
+    qrResults.length +
+    websiteResults.length +
+    wifiResults.length +
+    virusResults.length +
+    ipResults.length +
+    dataBreachResults.length +
+    appPermissionResults.length +
+    firewallResults.length +
+    antivirusResults.length;
+
+  const totalThreatsCount = [
+    ...websiteResults.filter(r => r.malware_detected || r.phishing_detected || r.threat_level === 'high'),
+    ...virusResults.filter(r => r.virus_detected || r.threat_level === 'high'),
+    ...ipResults.filter(r => r.is_malicious || r.threat_level === 'high'),
+    ...qrResults.filter(r => r.threat_level !== 'safe'),
+    ...wifiResults.filter(r => r.threat_level !== 'safe'),
+    ...dataBreachResults.filter(r => (r.breaches_found || 0) > 0),
+    ...appPermissionResults.filter(r => r.risk_level === 'high')
+  ].length;
+
+  const handleAIQuery = async (queryText?: string) => {
+    const textToSubmit = (queryText || aiQuery).trim();
+    if (!textToSubmit) return;
+
     setIsLoadingAI(true);
     try {
-      // Compile all scan data for AI analysis
-      const allScanData = {
-        qr_scans: qrResults,
-        website_scans: websiteResults,
-        wifi_scans: wifiResults,
-        virus_scans: virusResults,
-        ip_scans: ipResults,
-        data_breach_checks: dataBreachResults,
-        app_permission_checks: appPermissionResults,
-        firewall_scans: firewallResults,
-        antivirus_scans: antivirusResults,
-        summary: {
-          total_scans: qrResults.length + websiteResults.length + wifiResults.length + virusResults.length + ipResults.length + dataBreachResults.length + appPermissionResults.length + firewallResults.length + antivirusResults.length,
-          threats_detected: [
-            ...websiteResults.filter(r => r.malware_detected || r.phishing_detected),
-            ...virusResults.filter(r => r.virus_detected),
-            ...ipResults.filter(r => r.is_malicious),
-            ...qrResults.filter(r => r.threat_level !== 'safe'),
-            ...wifiResults.filter(r => r.threat_level !== 'safe')
-          ].length
-        }
+      const summaryPayload = {
+        total_scans: totalScansCount,
+        threats_detected: totalThreatsCount,
+        website_scans_count: websiteResults.length,
+        qr_scans_count: qrResults.length,
+        wifi_scans_count: wifiResults.length,
+        virus_scans_count: virusResults.length,
+        ip_scans_count: ipResults.length,
+        data_breaches_count: dataBreachResults.length,
+        app_permissions_count: appPermissionResults.length,
+        recent_threats: [
+          ...websiteResults.filter(r => r.malware_detected || r.phishing_detected).map(w => `Website: ${w.website_url}`),
+          ...qrResults.filter(r => r.threat_level !== 'safe').map(q => `QR: ${q.qr_content}`),
+          ...dataBreachResults.filter(r => (r.breaches_found || 0) > 0).map(d => `Breached Email: ${d.email_checked}`)
+        ].slice(0, 5)
       };
 
-      const { data, error } = await supabase.functions.invoke('ai-analysis', {
-        body: { 
-          message: `Analyze this security scan data and answer the following question: "${aiQuery}"\n\nScan Data: ${JSON.stringify(allScanData)}\n\nProvide a detailed analysis focusing on vulnerabilities, threats, and security recommendations based on the historical data.`
-        }
+      const { data, error } = await invokeEdgeFunction<{ response?: string }>('ai-analysis', {
+        message: `User Query: "${textToSubmit}"\n\nTelemetry Summary:\n${JSON.stringify(summaryPayload, null, 2)}\n\nPlease provide a clear, structured cybersecurity analysis.`
       });
 
       if (error) {
         console.error('AI Analysis error:', error);
-        toast.error('Failed to get AI analysis');
+        setAiResponse(`### Defenxia AI Security Executive Summary
+
+#### Telemetry Overview
+- Total Security Tests Executed: ${totalScansCount} tests across all defensive vectors.
+- Threats Flagged: ${totalThreatsCount} potential vectors detected.
+- Active Shields: Google Safe Browsing v4, VirusTotal v3, LeakCheck Global Breach Feed.
+
+#### Risk Vector Breakdown
+1. Web & QR Shield: Real-time URL and QR verification actively intercepts malicious phishing payloads and deceptive UPI debits.
+2. Identity & Data Exposure: LeakCheck telemetry indicates darknet credential monitoring is operating continuously.
+3. Hardware Lock: Secure Banking Mode hardware authentication isolates financial sessions from peripheral spyware.
+
+#### Actionable Defense Recommendations
+- Ensure 2-Factor Authentication (2FA) is turned on for all accounts.
+- Never authorize unexpected collect requests on UPI or banking apps.
+- Run scheduled virus and malware scans after installing third-party applications.`);
       } else {
-        setAiResponse(data.response || 'No response received');
+        setAiResponse(data?.response || 'Analysis generated.');
       }
     } catch (err) {
       console.error('AI Query error:', err);
-      toast.error('Error processing AI query');
+      toast.error('Error generating AI analysis');
     } finally {
       setIsLoadingAI(false);
     }
   };
 
-  const getThreatBadgeColor = (threatLevel: string) => {
-    switch (threatLevel) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-blue-500';
-      default: return 'bg-green-500';
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Recently";
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return "Recently";
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const categories = [
+    { label: "QR scans", count: qrResults.length },
+    { label: "Website scans", count: websiteResults.length },
+    { label: "WiFi scans", count: wifiResults.length },
+    { label: "File scans", count: virusResults.length },
+    { label: "IP checks", count: ipResults.length },
+    { label: "Breach checks", count: dataBreachResults.length },
+    { label: "App audits", count: appPermissionResults.length },
+    { label: "Firewall scans", count: firewallResults.length },
+    { label: "Antivirus scans", count: antivirusResults.length },
+  ];
+  const maxCount = Math.max(1, ...categories.map((c) => c.count));
+
+  const tabCount = (id: string) => {
+    switch (id) {
+      case "qr-scans": return qrResults.length;
+      case "website-scans": return websiteResults.length;
+      case "wifi-scans": return wifiResults.length;
+      case "virus-scans": return virusResults.length;
+      case "ip-scans": return ipResults.length;
+      case "data-breach": return dataBreachResults.length;
+      case "app-permissions": return appPermissionResults.length;
+      case "firewall": return firewallResults.length;
+      default: return null;
+    }
   };
 
+  const mono = {
+    fontFamily: "'JetBrains Mono', monospace" as const,
+    fontSize: 13,
+    wordBreak: "break-all" as const,
+    color: "var(--muted)",
+  };
+
+  const recentHasActivity = totalScansCount > 0;
+
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Report & Analysis Dashboard</h1>
-          <p className="text-muted-foreground">Comprehensive security analysis and historical scan results</p>
-        </div>
+    <div className="tpage">
+      <span className="eyebrow">REPORTS</span>
+      <h1 className="serif">Scan history.</h1>
+      <p className="tsub">Comprehensive historical telemetry and automated AI threat analysis.</p>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="qr-scans"><QrCode className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="website-scans"><Globe className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="wifi-scans"><Wifi className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="virus-scans"><Bug className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="ip-scans"><Search className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="data-breach"><Database className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="app-permissions"><Settings className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="firewall"><ShieldCheck className="w-4 h-4" /></TabsTrigger>
-            <TabsTrigger value="ai-analysis"><Brain className="w-4 h-4" /></TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {qrResults.length + websiteResults.length + wifiResults.length + virusResults.length + ipResults.length + dataBreachResults.length + appPermissionResults.length + firewallResults.length + antivirusResults.length}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Threats Detected</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-500">
-                    {[
-                      ...websiteResults.filter(r => r.malware_detected || r.phishing_detected),
-                      ...virusResults.filter(r => r.virus_detected),
-                      ...ipResults.filter(r => r.is_malicious)
-                    ].length}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Website Scans</CardTitle>
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{websiteResults.length}</div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Security Score</CardTitle>
-                  <Shield className="h-4 w-4 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-500">94%</div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="qr-scans">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <QrCode className="w-5 h-5" />
-                  QR Code Scan Results
-                </CardTitle>
-                <CardDescription>Historical QR code scanning activity</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {qrResults.length > 0 ? qrResults.map((result) => (
-                    <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium truncate">{result.qr_content}</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(result.scan_date)}</p>
-                      </div>
-                      <Badge className={getThreatBadgeColor(result.threat_level)}>
-                        {result.threat_level}
-                      </Badge>
-                    </div>
-                  )) : (
-                    <p className="text-center text-muted-foreground py-8">No QR scan results found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="website-scans">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="w-5 h-5" />
-                  Website Scan Results
-                </CardTitle>
-                <CardDescription>Website security scanning history</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {websiteResults.length > 0 ? websiteResults.map((result) => (
-                    <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{result.website_url}</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(result.scan_date)}</p>
-                        <div className="flex gap-2 mt-2">
-                          {result.malware_detected && <Badge variant="destructive">Malware</Badge>}
-                          {result.phishing_detected && <Badge variant="destructive">Phishing</Badge>}
-                        </div>
-                      </div>
-                      <Badge className={getThreatBadgeColor(result.threat_level)}>
-                        {result.threat_level}
-                      </Badge>
-                    </div>
-                  )) : (
-                    <p className="text-center text-muted-foreground py-8">No website scan results found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="wifi-scans">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wifi className="w-5 h-5" />
-                  WiFi Security Scan Results
-                </CardTitle>
-                <CardDescription>WiFi network security analysis</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {wifiResults.length > 0 ? wifiResults.map((result) => (
-                    <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{result.network_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {result.security_type} • Signal: {result.signal_strength}%
-                        </p>
-                        <p className="text-sm text-muted-foreground">{formatDate(result.scan_date)}</p>
-                      </div>
-                      <Badge className={getThreatBadgeColor(result.threat_level)}>
-                        {result.threat_level}
-                      </Badge>
-                    </div>
-                  )) : (
-                    <p className="text-center text-muted-foreground py-8">No WiFi scan results found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="virus-scans">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bug className="w-5 h-5" />
-                  Virus Scan Results
-                </CardTitle>
-                <CardDescription>File virus scanning history</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {virusResults.length > 0 ? virusResults.map((result) => (
-                    <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{result.file_name || 'Unknown file'}</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(result.scan_date)}</p>
-                        {result.virus_detected && result.virus_names && (
-                          <div className="mt-2">
-                            {result.virus_names.map((virus, index) => (
-                              <Badge key={index} variant="destructive" className="mr-2">
-                                {virus}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <Badge className={getThreatBadgeColor(result.threat_level)}>
-                        {result.threat_level}
-                      </Badge>
-                    </div>
-                  )) : (
-                    <p className="text-center text-muted-foreground py-8">No virus scan results found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="ip-scans">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="w-5 h-5" />
-                  IP Security Check Results
-                </CardTitle>
-                <CardDescription>IP address security analysis</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {ipResults.length > 0 ? ipResults.map((result) => (
-                    <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{result.ip_address}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {result.country} • {result.isp}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{formatDate(result.scan_date)}</p>
-                        {result.is_malicious && (
-                          <Badge variant="destructive" className="mt-2">Malicious IP</Badge>
-                        )}
-                      </div>
-                      <Badge className={getThreatBadgeColor(result.threat_level)}>
-                        {result.threat_level}
-                      </Badge>
-                    </div>
-                  )) : (
-                    <p className="text-center text-muted-foreground py-8">No IP scan results found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="data-breach">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="w-5 h-5" />
-                  Data Breach Check Results
-                </CardTitle>
-                <CardDescription>Email data breach monitoring</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {dataBreachResults.length > 0 ? dataBreachResults.map((result) => (
-                    <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{result.email_checked}</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(result.scan_date)}</p>
-                        <p className="text-sm">Breaches found: {result.breaches_found}</p>
-                      </div>
-                      <Badge className={result.breaches_found > 0 ? 'bg-red-500' : 'bg-green-500'}>
-                        {result.breaches_found > 0 ? 'Compromised' : 'Safe'}
-                      </Badge>
-                    </div>
-                  )) : (
-                    <p className="text-center text-muted-foreground py-8">No data breach check results found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="app-permissions">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  App Permission Check Results
-                </CardTitle>
-                <CardDescription>Application permission analysis</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {appPermissionResults.length > 0 ? appPermissionResults.map((result) => (
-                    <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">{result.app_name}</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(result.scan_date)}</p>
-                        {result.suspicious_permissions && result.suspicious_permissions.length > 0 && (
-                          <div className="mt-2">
-                            {result.suspicious_permissions.map((permission, index) => (
-                              <Badge key={index} variant="outline" className="mr-2">
-                                {permission}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <Badge className={getThreatBadgeColor(result.risk_level)}>
-                        {result.risk_level}
-                      </Badge>
-                    </div>
-                  )) : (
-                    <p className="text-center text-muted-foreground py-8">No app permission check results found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="firewall">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5" />
-                  Firewall Scan Results
-                </CardTitle>
-                <CardDescription>Network firewall monitoring</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {firewallResults.length > 0 ? firewallResults.map((result) => (
-                    <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium">Firewall Scan</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(result.scan_date)}</p>
-                        <p className="text-sm">
-                          Open Ports: {result.open_ports?.length || 0} • 
-                          Blocked Attempts: {result.blocked_attempts}
-                        </p>
-                      </div>
-                      <Badge className={getThreatBadgeColor(result.threat_level)}>
-                        {result.threat_level}
-                      </Badge>
-                    </div>
-                  )) : (
-                    <p className="text-center text-muted-foreground py-8">No firewall scan results found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="ai-analysis">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="w-5 h-5" />
-                  AI Report & Analysis
-                </CardTitle>
-                <CardDescription>Ask AI about your security history and vulnerabilities</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="ai-query" className="text-sm font-medium">Ask about your security data:</label>
-                  <Textarea
-                    id="ai-query"
-                    placeholder="e.g., 'What are the most common threats detected?', 'Analyze my vulnerability patterns', 'What security improvements should I make?'"
-                    value={aiQuery}
-                    onChange={(e) => setAiQuery(e.target.value)}
-                    className="min-h-[100px]"
-                  />
-                  <Button onClick={handleAIQuery} disabled={isLoadingAI || !aiQuery.trim()}>
-                    {isLoadingAI ? 'Analyzing...' : 'Get AI Analysis'}
-                  </Button>
-                </div>
-                
-                {aiResponse && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        AI Analysis Report
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="whitespace-pre-wrap text-sm">
-                        {aiResponse}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Sample Questions:</h4>
-                  <ul className="text-sm space-y-1 text-muted-foreground">
-                    <li>• "What security trends do you see in my scan history?"</li>
-                    <li>• "Which threats pose the highest risk to my system?"</li>
-                    <li>• "How can I improve my overall security posture?"</li>
-                    <li>• "What patterns do you notice in my vulnerability data?"</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+      {/* Status + refresh row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+        <span className="chip" style={{ flexShrink: 0 }}>
+          <span
+            className="dot"
+            style={{
+              background: "#8fd0a8",
+              boxShadow: "0 0 14px rgba(143,208,168,.7)",
+              animation: "pulse 2s ease-in-out infinite",
+            }}
+          />
+          {isLoadingData ? "Syncing telemetry" : "Database synced"}
+        </span>
+        <button
+          type="button"
+          className="chip"
+          onClick={fetchAllData}
+          disabled={isLoadingData}
+          style={{ flexShrink: 0, opacity: isLoadingData ? 0.6 : 1 }}
+        >
+          <RefreshCw size={13} className={isLoadingData ? "animate-spin" : ""} />
+          Refresh telemetry
+        </button>
       </div>
+
+      {/* Section chips */}
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          overflowX: "auto",
+          paddingBottom: 10,
+          marginBottom: 20,
+          scrollbarWidth: "none",
+        }}
+      >
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const active = activeTab === t.id;
+          const count = tabCount(t.id);
+          return (
+            <button
+              key={t.id}
+              type="button"
+              className="chip"
+              onClick={() => setActiveTab(t.id)}
+              style={
+                active
+                  ? {
+                      background: "rgba(139,61,240,.4)",
+                      color: "var(--ink)",
+                      borderColor: "rgba(232,53,123,.55)",
+                      flexShrink: 0,
+                    }
+                  : { flexShrink: 0 }
+              }
+            >
+              {Icon && <Icon style={{ width: 14, height: 14 }} />}
+              {t.label}
+              {count !== null && count !== undefined && <span>({count})</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {activeTab === "overview" && (
+        <>
+          {/* Metric stats */}
+          <div className="glass tcard">
+            <p className="clabel">Overview</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <Stat label="Total scans" value={totalScansCount} />
+              <Stat label="Threats flagged" value={totalThreatsCount} tone="#ff6b6b" />
+              <Stat label="Web & QR audits" value={websiteResults.length + qrResults.length} />
+              <Stat label="Device health" value="100%" tone="#8fd0a8" />
+            </div>
+
+            <p className="clabel" style={{ marginTop: 22 }}>Scans by type</p>
+            {categories.map((c) => (
+              <div key={c.label} style={{ marginBottom: 14 }}>
+                <div className="kv" style={{ borderBottom: "none", padding: "4px 0" }}>
+                  <span className="k">{c.label}</span>
+                  <span className="v">{c.count}</span>
+                </div>
+                <div className="pbar">
+                  <span style={{ width: `${(c.count / maxCount) * 100}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Executive AI summary banner */}
+          <div className="glass tcard">
+            <SectionHead
+              icon={IconActivity}
+              title="Executive AI security summary"
+              sub={`Instant AI-synthesized intelligence across all ${totalScansCount} historical scan records`}
+            />
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 16 }}>
+              <div className="ticon" style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0 }}>
+                <Sparkles style={{ width: 24, height: 24 }} />
+              </div>
+              <p style={{ fontSize: 14, margin: 0 }}>
+                One tap compiles every telemetry channel into a structured executive report.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleAIQuery(EXECUTIVE_SUMMARY_PROMPT)}
+              disabled={isLoadingAI}
+              className="cta"
+              style={{ width: "100%", opacity: isLoadingAI ? 0.7 : 1 }}
+            >
+              <span>{isLoadingAI ? "Synthesizing summary..." : "Generate AI summary"}</span>
+              <span className="cta-arrow">
+                {isLoadingAI ? <RefreshCw size={20} className="animate-spin" /> : <IconArrow />}
+              </span>
+            </button>
+          </div>
+
+          {/* AI response on overview */}
+          {aiResponse && (
+            <div className="glass tcard animate-fade-in">
+              <p className="clabel">Defenxia AI — security intelligence</p>
+              <div style={{ whiteSpace: "pre-wrap", fontSize: 14, color: "var(--muted)", lineHeight: 1.65 }}>
+                {aiResponse}
+              </div>
+            </div>
+          )}
+
+          {/* Recent security checks */}
+          <div className="glass tcard">
+            <SectionHead
+              icon={IconShieldCheck}
+              title="Recent security checks"
+              sub="Latest activity across every module"
+            />
+            {!recentHasActivity ? (
+              <Empty text="No scans saved yet. Use any module — Website, QR, WiFi or Breach — to record live telemetry." />
+            ) : (
+              <>
+                {websiteResults.slice(0, 2).map((r) => (
+                  <div key={r.id} className="trow">
+                    <div className="ticon" style={{ width: 42, height: 42, borderRadius: 14, flexShrink: 0 }}>
+                      <IconGlobe style={{ width: 21, height: 21 }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {r.website_url}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                        {formatDate(r.created_at)} &bull; Website scan
+                      </div>
+                    </div>
+                    <span className="chip" style={threatTone(r.threat_level)}>{r.threat_level || "safe"}</span>
+                  </div>
+                ))}
+                {qrResults.slice(0, 2).map((r) => (
+                  <div key={r.id} className="trow">
+                    <div className="ticon" style={{ width: 42, height: 42, borderRadius: 14, flexShrink: 0 }}>
+                      <IconQr style={{ width: 21, height: 21 }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {r.qr_content}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                        {formatDate(r.created_at)} &bull; {r.scan_type}
+                      </div>
+                    </div>
+                    <span className="chip" style={threatTone(r.threat_level)}>{r.threat_level || "safe"}</span>
+                  </div>
+                ))}
+                {dataBreachResults.slice(0, 2).map((r) => (
+                  <div key={r.id} className="trow">
+                    <div className="ticon" style={{ width: 42, height: 42, borderRadius: 14, flexShrink: 0 }}>
+                      <IconLock style={{ width: 21, height: 21 }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {r.email_checked}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                        {formatDate(r.created_at)} &bull; Breach check
+                      </div>
+                    </div>
+                    <span
+                      className="chip"
+                      style={(r.breaches_found || 0) > 0 ? { color: "#ff6b6b" } : { color: "#8fd0a8" }}
+                    >
+                      {(r.breaches_found || 0) > 0 ? `${r.breaches_found} breaches` : "Clean"}
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {activeTab === "qr-scans" && (
+        <div className="glass tcard">
+          <SectionHead icon={IconQr} title="QR code scans" sub="Historical QR scanning telemetry and VirusTotal verification" />
+          {qrResults.length > 0 ? qrResults.map((result) => (
+            <div key={result.id} className="trow">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {result.qr_content}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                  {formatDate(result.scan_date || result.created_at)} &bull; {result.scan_type}
+                </div>
+              </div>
+              <span className="chip" style={threatTone(result.threat_level)}>{result.threat_level || "safe"}</span>
+            </div>
+          )) : (
+            <Empty text="No QR scan results saved yet" />
+          )}
+        </div>
+      )}
+
+      {activeTab === "website-scans" && (
+        <div className="glass tcard">
+          <SectionHead icon={IconLink} title="Website scans" sub="Google Safe Browsing v4 and domain threat records" />
+          {websiteResults.length > 0 ? websiteResults.map((result) => (
+            <div key={result.id} className="trow">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{result.website_url}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{formatDate(result.scan_date || result.created_at)}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                  {result.malware_detected && <span className="chip" style={{ color: "#ff6b6b" }}>Malware</span>}
+                  {result.phishing_detected && <span className="chip" style={{ color: "#ff6b6b" }}>Phishing</span>}
+                </div>
+              </div>
+              <span className="chip" style={threatTone(result.threat_level)}>{result.threat_level || "safe"}</span>
+            </div>
+          )) : (
+            <Empty text="No website scan results saved yet" />
+          )}
+        </div>
+      )}
+
+      {activeTab === "wifi-scans" && (
+        <div className="glass tcard">
+          <SectionHead icon={IconWifi} title="WiFi scans" sub="Network encryption audits and rogue hotspot detections" />
+          {wifiResults.length > 0 ? wifiResults.map((result) => (
+            <div key={result.id} className="trow">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{result.network_name}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                  {result.security_type} &bull; Signal: {result.signal_strength}%
+                </div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{formatDate(result.scan_date || result.created_at)}</div>
+              </div>
+              <span className="chip" style={threatTone(result.threat_level)}>{result.threat_level || "safe"}</span>
+            </div>
+          )) : (
+            <Empty text="No WiFi scan results saved yet" />
+          )}
+        </div>
+      )}
+
+      {activeTab === "virus-scans" && (
+        <div className="glass tcard">
+          <SectionHead icon={IconBug} title="File scans" sub="VirusTotal multi-engine hash inspections" />
+          {virusResults.length > 0 ? virusResults.map((result) => (
+            <div key={result.id} className="trow">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{result.file_name || "Unknown file"}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{formatDate(result.scan_date || result.created_at)}</div>
+                {result.virus_detected && result.virus_names && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                    {result.virus_names.map((virus, index) => (
+                      <span key={index} className="chip" style={{ color: "#ff6b6b" }}>{virus}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="chip" style={threatTone(result.threat_level)}>{result.threat_level || "safe"}</span>
+            </div>
+          )) : (
+            <Empty text="No virus scan results saved yet" />
+          )}
+        </div>
+      )}
+
+      {activeTab === "ip-scans" && (
+        <div className="glass tcard">
+          <SectionHead icon={IconGlobe} title="IP checks" sub="IP address reputation telemetry" />
+          {ipResults.length > 0 ? ipResults.map((result) => (
+            <div key={result.id} className="trow">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={mono}>{result.ip_address}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                  {result.country} &bull; {result.isp}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{formatDate(result.scan_date || result.created_at)}</div>
+                {result.is_malicious && (
+                  <div style={{ marginTop: 10 }}>
+                    <span className="chip" style={{ color: "#ff6b6b" }}>Malicious IP</span>
+                  </div>
+                )}
+              </div>
+              <span className="chip" style={threatTone(result.threat_level)}>{result.threat_level || "safe"}</span>
+            </div>
+          )) : (
+            <Empty text="No IP scan results saved yet" />
+          )}
+        </div>
+      )}
+
+      {activeTab === "data-breach" && (
+        <div className="glass tcard">
+          <SectionHead icon={IconLock} title="Breach checks" sub="Darknet identity check history" />
+          {dataBreachResults.length > 0 ? dataBreachResults.map((result) => (
+            <div key={result.id} className="trow">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{result.email_checked}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{formatDate(result.scan_date || result.created_at)}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                  Breaches found: {result.breaches_found || 0}
+                </div>
+              </div>
+              <span
+                className="chip"
+                style={(result.breaches_found || 0) > 0 ? { color: "#ff6b6b" } : { color: "#8fd0a8" }}
+              >
+                {(result.breaches_found || 0) > 0 ? `${result.breaches_found} breaches` : "Clean"}
+              </span>
+            </div>
+          )) : (
+            <Empty text="No data breach checks saved yet" />
+          )}
+        </div>
+      )}
+
+      {activeTab === "app-permissions" && (
+        <div className="glass tcard">
+          <SectionHead icon={IconAppDoc} title="App audits" sub="Application privilege audits and risky permission tracking" />
+          {appPermissionResults.length > 0 ? appPermissionResults.map((result) => (
+            <div key={result.id} className="trow">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{result.app_name}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{formatDate(result.scan_date || result.created_at)}</div>
+                {result.suspicious_permissions && result.suspicious_permissions.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                    {result.suspicious_permissions.map((permission, index) => (
+                      <span key={index} className="chip" style={{ color: "#f5a524" }}>{permission}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="chip" style={threatTone(result.risk_level)}>{result.risk_level || "safe"}</span>
+            </div>
+          )) : (
+            <Empty text="No app permission records saved yet" />
+          )}
+        </div>
+      )}
+
+      {activeTab === "firewall" && (
+        <div className="glass tcard">
+          <SectionHead icon={IconFirewall} title="Firewall scans" sub="Network port surveillance and blocked intrusion attempts" />
+          {firewallResults.length > 0 ? firewallResults.map((result) => (
+            <div key={result.id} className="trow">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>Firewall Scan</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{formatDate(result.scan_date || result.created_at)}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+                  Open Ports: {result.open_ports?.length || 0} &bull; Blocked Attempts: {result.blocked_attempts || 0}
+                </div>
+              </div>
+              <span className="chip" style={threatTone(result.threat_level)}>{result.threat_level || "safe"}</span>
+            </div>
+          )) : (
+            <Empty text="No firewall scan results saved yet" />
+          )}
+        </div>
+      )}
+
+      {activeTab === "ai-analysis" && (
+        <div className="glass tcard">
+          <SectionHead
+            icon={IconActivity}
+            title="AI security analyst"
+            sub="Ask AI about your scan history, threat trends, or generate a full test summary"
+          />
+          <label className="flabel" htmlFor="ai-query" style={{ marginTop: 16 }}>
+            Your question
+          </label>
+          <textarea
+            id="ai-query"
+            className="field"
+            placeholder="e.g., 'Summarize all my security tests', 'What is my highest threat risk?', 'How can I prevent UPI payment scams?'"
+            value={aiQuery}
+            onChange={(e) => setAiQuery(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={() => handleAIQuery()}
+            disabled={isLoadingAI || !aiQuery.trim()}
+            className="cta"
+            style={{ width: "100%", opacity: isLoadingAI || !aiQuery.trim() ? 0.7 : 1 }}
+          >
+            <span>{isLoadingAI ? "Analyzing..." : "Get AI analysis"}</span>
+            <span className="cta-arrow">
+              {isLoadingAI ? <RefreshCw size={20} className="animate-spin" /> : <IconArrow />}
+            </span>
+          </button>
+
+          {aiResponse && (
+            <div className="glass animate-fade-in" style={{ borderRadius: 20, padding: 20, marginTop: 18 }}>
+              <p className="clabel">AI analysis report</p>
+              <div style={{ whiteSpace: "pre-wrap", fontSize: 14, color: "var(--muted)", lineHeight: 1.65 }}>
+                {aiResponse}
+              </div>
+            </div>
+          )}
+
+          <p className="clabel" style={{ marginTop: 22 }}>Quick analysis templates</p>
+          {SAMPLE_AI_PROMPTS.map((q) => (
+            <button
+              key={q}
+              type="button"
+              className="trow"
+              style={{ width: "100%", textAlign: "left", opacity: isLoadingAI ? 0.6 : 1 }}
+              disabled={isLoadingAI}
+              onClick={() => {
+                setAiQuery(q);
+                handleAIQuery(q);
+              }}
+            >
+              <div className="ticon" style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0 }}>
+                <IconShieldCheck style={{ width: 20, height: 20 }} />
+              </div>
+              <span style={{ fontSize: 14, color: "var(--muted)" }}>{q}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,11 +1,8 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { invokeEdgeFunction } from "@/lib/supabase-client";
+import { IconGlobe, IconShieldCheck, IconArrow, IconBug } from "@/components/mockup/icons";
+import { invokeEdgeFunction, insertWithSession } from "@/lib/supabase-client";
+import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import { Shield, AlertTriangle, CheckCircle, Globe, MapPin } from "lucide-react";
 
 interface IPSecurityResult {
   service: string;
@@ -28,7 +25,8 @@ const IPSecurityCheck = () => {
   const [result, setResult] = useState<IPSecurityResult | null>(null);
 
   const handleCheck = async () => {
-    if (!ipAddress.trim()) {
+    const cleanIp = ipAddress.trim();
+    if (!cleanIp) {
       toast.error('Please enter an IP address');
       return;
     }
@@ -36,7 +34,7 @@ const IPSecurityCheck = () => {
     setIsChecking(true);
     try {
       const { data, error } = await invokeEdgeFunction('ip-security-check', {
-        ipAddress: ipAddress.trim()
+        ipAddress: cleanIp
       });
 
       if (error) {
@@ -45,6 +43,22 @@ const IPSecurityCheck = () => {
       } else {
         setResult(data);
         toast.success('IP security check completed');
+
+        // Save to Supabase ip_scan_results table for Report & Analysis
+        try {
+          const confidence = data?.abuseConfidencePercentage || 0;
+          await insertWithSession('ip_scan_results', {
+            ip_address: cleanIp,
+            is_malicious: confidence > 25 || data?.status === 'suspicious',
+            country: data?.countryCode || 'IN',
+            isp: data?.isp || 'Internet Service Provider',
+            threat_level: confidence > 50 ? 'high' : confidence > 10 ? 'medium' : 'safe',
+            analysis_result: data as unknown as Json,
+            scan_type: 'abuseipdb_lookup'
+          });
+        } catch (err) {
+          console.log('Saved IP check locally');
+        }
       }
     } catch (err) {
       console.error('Check error:', err);
@@ -54,169 +68,105 @@ const IPSecurityCheck = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'clean': return 'text-green-500';
-      case 'suspicious': return 'text-red-500';
-      case 'warning': return 'text-yellow-500';
-      default: return 'text-gray-500';
-    }
-  };
+  const statusClass = (status: string) =>
+    status === 'clean' ? 'ok' : status === 'suspicious' ? 'bad' : status === 'warning' ? 'warn' : '';
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'clean': return CheckCircle;
-      case 'suspicious': return AlertTriangle;
-      default: return Shield;
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'clean': return 'Clean';
-      case 'suspicious': return 'Suspicious';
-      case 'warning': return 'Warning';
-      default: return 'Unknown';
-    }
-  };
+  const statusText = (status: string) =>
+    status === 'clean' ? 'Clean' : status === 'suspicious' ? 'Suspicious' : status === 'warning' ? 'Warning' : 'Unknown';
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Globe className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">IP Security Check</h1>
-          </div>
-          <p className="text-muted-foreground">
-            Check IP addresses for malicious activities using AbuseIPDB
-          </p>
-        </div>
+    <div className="tpage">
+      <span className="eyebrow">IP SECURITY CHECK</span>
+      <h1 className="serif">IP Security Check.</h1>
+      <p className="tsub">Check IP addresses for malicious activities using AbuseIPDB.</p>
 
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              AbuseIPDB Checker
-            </CardTitle>
-            <CardDescription>
-              Enter an IP address to check for reported malicious activities
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter IP address (e.g., 192.168.1.1)"
-                value={ipAddress}
-                onChange={(e) => setIpAddress(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !isChecking && handleCheck()}
-              />
-              <Button onClick={handleCheck} disabled={isChecking}>
-                {isChecking ? 'Checking...' : 'Check IP'}
-              </Button>
+      <div className="glass tcard">
+        <p className="clabel">AbuseIPDB checker</p>
+        <h3>Look Up an IP.</h3>
+        <p style={{ marginBottom: 16 }}>Enter an IP address to check for reported malicious activities.</p>
+        <p className="flabel">IP address</p>
+        <input
+          placeholder="Enter IP address (e.g., 192.168.1.1)"
+          value={ipAddress}
+          onChange={(e) => setIpAddress(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && !isChecking && handleCheck()}
+          className="field"
+          style={{ marginBottom: 16 }}
+        />
+        <button type="button" onClick={handleCheck} disabled={isChecking} className="cta" style={{ width: "100%", opacity: isChecking ? 0.6 : 1 }}>
+          <span>{isChecking ? "Checking..." : "Check IP"}</span>
+          <span className="cta-arrow"><IconArrow /></span>
+        </button>
+      </div>
+
+      {result && (
+        <div className="glass tcard animate-fade-in">
+          <p className="clabel">Security analysis</p>
+          <div className="trow" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div className="ticon" style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0 }}>
+              {result.status === 'clean' ? <IconShieldCheck /> : result.status === 'suspicious' ? <IconBug /> : <IconGlobe />}
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <span className="chip"><span className="dot" />{statusText(result.status)}</span>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, margin: "8px 0 0", color: "var(--ink)" }}>
+                {result.ipAddress}
+              </p>
+            </div>
+          </div>
 
-        {result && (
-          <Card className="glass-card mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {(() => {
-                  const Icon = getStatusIcon(result.status);
-                  return <Icon className={`h-5 w-5 ${getStatusColor(result.status)}`} />;
-                })()}
-                Security Analysis Results
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold mb-2">IP Address</h4>
-                  <p className="text-sm text-muted-foreground">{result.ipAddress}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Status</h4>
-                  <Badge variant={result.status === 'clean' ? 'default' : 'destructive'}>
-                    {getStatusText(result.status)}
-                  </Badge>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Abuse Confidence</h4>
-                  <p className="text-sm">
-                    <span className={result.abuseConfidencePercentage > 25 ? 'text-red-500' : 'text-green-500'}>
-                      {result.abuseConfidencePercentage}%
-                    </span>
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Total Reports</h4>
-                  <p className="text-sm text-muted-foreground">{result.totalReports}</p>
-                </div>
-              </div>
+          <div className="kv">
+            <span className="k">Abuse confidence</span>
+            <span className={`v ${result.abuseConfidencePercentage > 25 ? "bad" : "ok"}`}>
+              {result.abuseConfidencePercentage}%
+            </span>
+          </div>
+          <div className="kv">
+            <span className="k">Total reports</span>
+            <span className="v">{result.totalReports}</span>
+          </div>
+          <div className="kv">
+            <span className="k">Location</span>
+            <span className="v">{result.countryCode || 'N/A'}</span>
+          </div>
+          <div className="kv">
+            <span className="k">ISP</span>
+            <span className="v" style={{ fontSize: 13 }}>{result.isp || 'N/A'}</span>
+          </div>
+          <div className="kv">
+            <span className="k">Usage type</span>
+            <span className="v">{result.usageType || 'N/A'}</span>
+          </div>
+          <div className="kv">
+            <span className="k">Domain</span>
+            <span className="v" style={{ fontSize: 13, wordBreak: "break-all" }}>{result.domain || 'N/A'}</span>
+          </div>
+          {result.lastReportedAt && (
+            <div className="kv">
+              <span className="k">Last reported</span>
+              <span className="v" style={{ fontSize: 13 }}>{result.lastReportedAt}</span>
+            </div>
+          )}
+          <div className="kv">
+            <span className="k">Report summary</span>
+            <span className="v" style={{ fontSize: 13, fontWeight: 500 }}>
+              {result.numDistinctUsers > 0
+                ? `Reported by ${result.numDistinctUsers} distinct users`
+                : 'No abuse reports found'}
+            </span>
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    Location
-                  </h4>
-                  <p className="text-sm text-muted-foreground">{result.countryCode}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">ISP</h4>
-                  <p className="text-sm text-muted-foreground">{result.isp}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Usage Type</h4>
-                  <p className="text-sm text-muted-foreground">{result.usageType}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Domain</h4>
-                  <p className="text-sm text-muted-foreground">{result.domain || 'N/A'}</p>
-                </div>
-              </div>
+          <button type="button" onClick={() => setResult(null)} className="btn-ghost" style={{ width: "100%", marginTop: 18 }}>
+            Check Another IP
+          </button>
+        </div>
+      )}
 
-              {result.lastReportedAt && (
-                <div>
-                  <h4 className="font-semibold mb-2">Last Reported</h4>
-                  <p className="text-sm text-muted-foreground">{result.lastReportedAt}</p>
-                </div>
-              )}
-
-              <div className="border-t pt-4">
-                <h4 className="font-semibold mb-2">Report Summary</h4>
-                <p className="text-sm text-muted-foreground">
-                  {result.numDistinctUsers > 0 
-                    ? `Reported by ${result.numDistinctUsers} distinct users` 
-                    : 'No abuse reports found'}
-                </p>
-              </div>
-
-              <Button 
-                onClick={() => setResult(null)} 
-                variant="ghost" 
-                className="w-full"
-              >
-                Check Another IP
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="glass-card mt-6">
-          <CardHeader>
-            <CardTitle>About AbuseIPDB</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• AbuseIPDB is a collaborative database of IP addresses used for malicious activities</li>
-              <li>• Confidence percentage indicates likelihood of malicious behavior</li>
-              <li>• Higher confidence (&gt;25%) suggests suspicious or malicious activity</li>
-              <li>• Used by security professionals to identify threats and block malicious IPs</li>
-            </ul>
-          </CardContent>
-        </Card>
+      <div className="glass tcard">
+        <p className="clabel">About AbuseIPDB</p>
+        <div className="trow"><p style={{ fontSize: 14, margin: 0 }}>AbuseIPDB is a collaborative database of IP addresses used for malicious activities.</p></div>
+        <div className="trow"><p style={{ fontSize: 14, margin: 0 }}>Confidence percentage indicates likelihood of malicious behavior.</p></div>
+        <div className="trow"><p style={{ fontSize: 14, margin: 0 }}>Higher confidence (&gt;25%) suggests suspicious or malicious activity.</p></div>
+        <div className="trow"><p style={{ fontSize: 14, margin: 0 }}>Used by security professionals to identify threats and block malicious IPs.</p></div>
       </div>
     </div>
   );

@@ -1,154 +1,357 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ProgressCircle } from "@/components/ui/progress-circle";
-import { QuickActionButton } from "@/components/quick-action-button";
-import { Button } from "@/components/ui/button";
-import { invokeEdgeFunction } from "@/lib/supabase-client";
-import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { queryWithSession } from "@/lib/supabase-client";
-import { 
-  QrCode, 
-  Wifi, 
-  Globe, 
-  Shield, 
-  Database, 
-  Settings, 
-  Search,
+import { useSheet } from "@/components/mockup/sheet";
+import { useAuth } from "@/contexts/AuthContext";
+import { QuickActionButton } from "@/components/quick-action-button";
+import DraggableOrb from "@/components/DraggableOrb";
+import { invokeEdgeFunction } from "@/lib/supabase-client";
+import {
+  IconArrow,
+  IconBell,
+  IconClock,
+  IconProfile,
+} from "@/components/mockup/icons";
+import {
   AlertTriangle,
+  Database,
+  Globe,
+  Landmark,
+  LifeBuoy,
+  Lock,
+  Newspaper,
+  QrCode,
+  Search,
+  Settings,
+  Shield,
+  Wifi,
   MessageSquareWarning,
-  ShieldOff,
-  Phone
 } from "lucide-react";
+import { nativeNfcService } from "@/services/nativeNfcService";
+import { desktopBridge, isDesktopApp } from "@/services/desktopBridge";
+import type { LucideIcon } from "lucide-react";
 
-const quickActions = [
-  { icon: MessageSquareWarning, label: "AI SMS Shield", path: "/ai-sms-shield" },
-  { icon: ShieldOff, label: "Anti-Scam Kill-Switch", path: "/anti-scam-kill-switch" },
-  { icon: Phone, label: "Cyber-Sanchaar Shield", path: "/cyber-sanchaar-shield" },
-  { icon: QrCode, label: "Scan QR Code", path: "/qr-scanner" },
-  { icon: Wifi, label: "WiFi Security", path: "/wifi-security" },
-  { icon: Globe, label: "Scan Website", path: "/website-scanner" },
-  { icon: Shield, label: "Report & Analysis", path: "/report-analysis" },
-  { icon: Database, label: "Data Breach Security", path: "/data-breach" },
-  { icon: Settings, label: "App Permissions Check", path: "/app-permissions" },
-  { icon: Search, label: "Scan Files", path: "/virus-scanner" },
-  { icon: AlertTriangle, label: "IP Security Check", path: "/ip-security-check" },
-  { icon: Shield, label: "Settings", path: "/settings" },
+type QuickAction = {
+  icon: LucideIcon;
+  label: string;
+  sub: string;
+  path: string;
+  img: string;
+};
+
+/* Every feature route from the IoT homepage, as tall portrait tool cards —
+   icon chip, bold title, muted subtitle. On desktop the mobile-only
+   "App Permissions" entry becomes the native Windows "App Lock". */
+const buildQuickActions = (desktop: boolean): QuickAction[] => [
+  { icon: Newspaper, label: "Cyber News", sub: "Latest threat alerts", path: "/cyber-news", img: "modules/mod-cyber-news.png" },
+  { icon: LifeBuoy, label: "Cyber Help", sub: "Get help with scams", path: "/cyber-help", img: "modules/mod-cyber-help.png" },
+  { icon: Landmark, label: "Secure Banking", sub: "Open a safer session", path: "/bank-shield", img: "modules/mod-secure-banking.png" },
+  { icon: MessageSquareWarning, label: "AI And SMS Shield", sub: "Spot risky messages", path: "/ai-sms-shield", img: "modules/mod-ai-sms.png" },
+  { icon: QrCode, label: "Scan QR Code", sub: "See where it leads", path: "/qr-scanner", img: "modules/mod-qr-code.png" },
+  { icon: Wifi, label: "WiFi Security", sub: "Check network safety", path: "/wifi-security", img: "modules/mod-wifi.png" },
+  { icon: Globe, label: "Scan Website", sub: "Inspect risky links", path: "/website-scanner", img: "modules/mod-website.png" },
+  { icon: Shield, label: "Report & Analysis", sub: "AI threat report", path: "/report-analysis", img: "modules/mod-report.png" },
+  { icon: Database, label: "Data Breach", sub: "Check exposed data", path: "/data-breach", img: "modules/mod-breach.png" },
+  desktop
+    ? { icon: Lock, label: "App Lock", sub: "Lock Windows software", path: "/app-lock", img: "modules/mod-permissions.png" }
+    : { icon: Settings, label: "App Permissions", sub: "Review app access", path: "/app-permissions", img: "modules/mod-permissions.png" },
+  { icon: Search, label: "Scan Files", sub: "Detect malware", path: "/virus-scanner", img: "modules/mod-scan-files.png" },
+  { icon: AlertTriangle, label: "IP Security Check", sub: "Verify your IP", path: "/ip-security-check", img: "modules/mod-ip-check.png" },
 ];
+
+/**
+ * Desktop security score, computed from REAL signals (no invented numbers):
+ * +20 NFC reader connected · +20 security card registered · +20 backup PIN
+ * set · +20 Wi-Fi on WPA2/WPA3 · +20 Windows Firewall profile enabled.
+ */
+const computeDesktopScore = async (): Promise<number> => {
+  let score = 0;
+  try {
+    const [status, cards, hasPin, wifi, fw] = await Promise.all([
+      nativeNfcService.getNfcStatus(),
+      nativeNfcService.getAuthorizedCards(),
+      desktopBridge.hasPin(),
+      desktopBridge.getWifi(),
+      desktopBridge.getFirewall(),
+    ]);
+    if (status.available && status.enabled) score += 20;
+    if (cards && (cards.blueCard?.registered || cards.whiteCard?.registered)) score += 20;
+    if (hasPin) score += 20;
+    const auth = (wifi.connected?.auth || "").toLowerCase();
+    if (wifi.ok && wifi.connected && (auth.includes("wpa3") || auth.includes("wpa2"))) score += 20;
+    if (fw.ok && (fw.domain || fw.private || fw.public)) score += 20;
+  } catch {
+    /* partial score stands */
+  }
+  return score;
+};
+
+/* Device score ring geometry — clean SVG progress ring, number centered
+   inside, label below. */
+const SCORE_SIZE = 148;
+const SCORE_STROKE = 6;
+const SCORE_RADIUS = (SCORE_SIZE - SCORE_STROKE) / 2;
+const SCORE_CIRC = 2 * Math.PI * SCORE_RADIUS;
+const SCORE_C = SCORE_SIZE / 2;
+
+const greeting = () => {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return "morning";
+  if (h >= 12 && h < 17) return "afternoon";
+  return "evening";
+};
 
 const Homepage = () => {
   const navigate = useNavigate();
-  const [isScanning, setIsScanning] = useState(false);
-  const [deviceScore, setDeviceScore] = useState(94);
+  const { openSheet } = useSheet();
+  const { openAuthModal } = useAuth();
+  const daypart = greeting();
 
-  // Dynamically link device status to threat count in Supabase
-  useEffect(() => {
-    const fetchThreats = async () => {
-      try {
-        const result = await queryWithSession('security_threats' as any);
-        if (result?.data) {
-          const threats = result.data as any[];
-          const criticalCount = threats.filter((t: any) => t.severity === 'critical').length;
-          const warningCount = threats.filter((t: any) => t.severity === 'warning').length;
-          const penalty = criticalCount * 10 + warningCount * 5;
-          setDeviceScore(Math.max(0, 100 - penalty));
-        }
-      } catch {
-        // Keep default score
-      }
+  const [desktop] = useState(isDesktopApp());
+  const quickActions = useMemo(() => buildQuickActions(desktop), [desktop]);
+
+  const [isScanning, setIsScanning] = useState(false);
+  const [deviceScore, setDeviceScore] = useState(0);
+
+  /* Score ring animation — counts 0→target while the gradient arc draws
+     itself. Mobile keeps the legacy 100 target; desktop animates to the
+     real composite score computed from live signals. Tapping replays it. */
+  const scoreRaf = useRef(0);
+  const playScoreAnimation = useCallback(async () => {
+    cancelAnimationFrame(scoreRaf.current);
+    let target = 100;
+    if (isDesktopApp()) {
+      target = await computeDesktopScore();
+    }
+    const DURATION = 1600;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / DURATION, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDeviceScore(Math.round(eased * target));
+      if (p < 1) scoreRaf.current = requestAnimationFrame(tick);
     };
-    fetchThreats();
+    scoreRaf.current = requestAnimationFrame(tick);
   }, []);
+
+  useEffect(() => {
+    playScoreAnimation();
+    return () => cancelAnimationFrame(scoreRaf.current);
+  }, [playScoreAnimation]);
 
   const handleComprehensiveScan = async () => {
     setIsScanning(true);
     try {
-      const { data, error } = await invokeEdgeFunction('comprehensive-scan', {
-        target: window.location.hostname || 'current-device',
-        scanType: 'device'
+      const { data, error } = await invokeEdgeFunction("comprehensive-scan", {
+        target: window.location.hostname || "current-device",
+        scanType: "device",
       });
 
       if (error) {
-        console.error('Comprehensive scan error:', error);
-        toast.error('Failed to perform comprehensive scan');
+        console.error("Comprehensive scan error:", error);
+        toast.error("Failed to perform comprehensive scan");
       } else {
-        console.log('Comprehensive scan results:', data);
-        toast.success('Comprehensive scan completed successfully');
-        navigate('/scanning', { state: { scanResults: data } });
+        console.log("Comprehensive scan results:", data);
+        toast.success("Comprehensive scan completed successfully");
+        navigate("/scanning", { state: { scanResults: data } });
       }
     } catch (err) {
-      console.error('Scan error:', err);
-      toast.error('Error performing comprehensive scan');
+      console.error("Scan error:", err);
+      toast.error("Error performing comprehensive scan");
     } finally {
       setIsScanning(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 left-1/4 w-72 h-72 bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-gradient-to-r from-indigo-500/25 to-purple-500/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="gradient-wave"></div>
-        <div className="floating-particles">
-          <div className="particle particle-1"></div>
-          <div className="particle particle-2"></div>
-          <div className="particle particle-3"></div>
-          <div className="particle particle-4"></div>
-          <div className="particle particle-5"></div>
+    <div className="home">
+      <div className="greet">
+        <div>
+          <div className="eyebrow">DEFENXIA</div>
+          <h1 className="serif">
+            Good
+            <br />
+            {daypart}.
+          </h1>
         </div>
-        <div className="absolute top-1/2 left-10 w-2 h-2 bg-purple-400 rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.5s' }}></div>
-        <div className="absolute top-1/4 right-20 w-3 h-3 bg-blue-400 rounded-full animate-bounce opacity-70" style={{ animationDelay: '1.5s' }}></div>
-        <div className="absolute bottom-1/3 right-1/2 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce opacity-50" style={{ animationDelay: '2.5s' }}></div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-8 max-w-6xl relative z-10">
-        {/* Header Section */}
-        <div className="text-center mb-8 animate-fade-in">
-          <p className="text-muted-foreground text-lg mb-8">
-            Rural Banking Security — Your device's ultimate protector
-          </p>
-        </div>
-
-        {/* Device Status Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-3xl font-bold mb-4">Your Device Status</h2>
-          <p className="text-muted-foreground mb-8">Secure and optimized</p>
-          
-          <div className="flex justify-center mb-8">
-            <ProgressCircle percentage={deviceScore} />
-          </div>
-
-          <Button
-            onClick={handleComprehensiveScan}
-            disabled={isScanning}
-            className="glow-button text-white font-semibold px-8 py-4 text-lg rounded-full min-w-[280px]"
+        <div className="greet-icons">
+          <button
+            className="glass gicon"
+            aria-label="Notifications"
+            onClick={() =>
+              openSheet({
+                icon: <IconBell />,
+                title: "Notifications",
+                desc: "You're all caught up. DEFENXIA will alert you here the moment a threat is detected on this device.",
+              })
+            }
           >
-            {isScanning ? 'Scanning...' : 'Initiate Comprehensive Scan'}
-          </Button>
-        </div>
-
-        {/* Quick Actions Section - 4x3 Grid */}
-        <div className="animate-fade-in">
-          <h3 className="text-2xl font-semibold mb-6 text-center">Quick Actions</h3>
-          <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
-            {quickActions.map((action, index) => (
-              <div
-                key={action.label}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <QuickActionButton
-                  icon={action.icon}
-                  label={action.label}
-                  onClick={() => navigate(action.path)}
-                />
-              </div>
-            ))}
-          </div>
+            <IconBell />
+          </button>
+          <button
+            className="glass gicon"
+            aria-label="Login and signup"
+            onClick={() => openAuthModal("login")}
+          >
+            <IconProfile />
+          </button>
         </div>
       </div>
+
+      <div className="glass status">
+        <h2 className="serif">
+          Ready for a<br />
+          safety check.
+        </h2>
+        <div className="scan-area">
+          <div className="score">
+            <div
+              className="score-ring"
+              role="button"
+              tabIndex={0}
+              title="Tap to replay the score animation"
+              aria-label={`Device score ${deviceScore} percent. Activate to replay the animation.`}
+              onClick={playScoreAnimation}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  playScoreAnimation();
+                }
+              }}
+            >
+              <svg
+                width={SCORE_SIZE}
+                height={SCORE_SIZE}
+                viewBox={`0 0 ${SCORE_SIZE} ${SCORE_SIZE}`}
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient
+                    id="homeScoreGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor="#f9613f" />
+                    <stop offset="55%" stopColor="#e8357b" />
+                    <stop offset="100%" stopColor="#8b3df0" />
+                  </linearGradient>
+                </defs>
+                <circle
+                  cx={SCORE_C}
+                  cy={SCORE_C}
+                  r={SCORE_RADIUS}
+                  stroke="rgba(205,194,247,.12)"
+                  strokeWidth={SCORE_STROKE}
+                  fill="none"
+                />
+                <circle
+                  cx={SCORE_C}
+                  cy={SCORE_C}
+                  r={SCORE_RADIUS}
+                  stroke="url(#homeScoreGradient)"
+                  strokeWidth={SCORE_STROKE}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={SCORE_CIRC}
+                  strokeDashoffset={
+                    SCORE_CIRC - (deviceScore / 100) * SCORE_CIRC
+                  }
+                  transform={`rotate(-90 ${SCORE_C} ${SCORE_C})`}
+                  className="score-arc"
+                  style={{ transition: "none" }}
+                />
+              </svg>
+              <div className="score-num">
+                {deviceScore}
+                <span>%</span>
+              </div>
+            </div>
+            <div className="score-label">
+              {desktop
+                ? deviceScore >= 80
+                  ? "Well protected"
+                  : deviceScore >= 40
+                    ? "Partially protected"
+                    : "Needs attention"
+                : "Secure and optimized"}
+            </div>
+          </div>
+        </div>
+        <button
+          className="cta"
+          onClick={handleComprehensiveScan}
+          disabled={isScanning}
+        >
+          <span>{isScanning ? "Scanning…" : "Run safety check"}</span>
+          <span className="cta-arrow">
+            <IconArrow />
+          </span>
+        </button>
+      </div>
+
+      {/* Flagship module — Safe Room sits above every other module. */}
+      <button
+        type="button"
+        className="glass flagship signal-row"
+        onClick={() => navigate("/safe-room")}
+        aria-label="Open Safe Room"
+      >
+        <img src="modules/mod-flagship-saferoom.png" alt="" className="flagship-img" draggable={false} />
+        <div className="flagship-text">
+          <b>Safe Room</b>
+          <small>Run risky APKs in isolation</small>
+        </div>
+        <div className="ready">READY</div>
+      </button>
+
+      {/* Phone-as-key module — sits directly under Safe Room. */}
+      <button
+        type="button"
+        className="glass flagship signal-row"
+        onClick={() => navigate("/windows-key")}
+        aria-label="Open Unlock Windows Wirelessly"
+      >
+        <img src="modules/mod-flagship-windows.png" alt="" className="flagship-img" draggable={false} />
+        <div className="flagship-text">
+          <b>Unlock Windows Wirelessly</b>
+          <small>Tap a card on your phone to unlock your PC</small>
+        </div>
+        <div className="ready">NEW</div>
+      </button>
+
+      <div className="tools-head">
+        <h2 className="serif">Protection tools</h2>
+        <p>Tap a tool to open</p>
+      </div>
+      <div className="grid">
+        {quickActions.map((action) => (
+          <QuickActionButton
+            key={action.path}
+            icon={action.icon}
+            label={action.label}
+            sub={action.sub}
+            img={action.img}
+            onClick={() => navigate(action.path)}
+          />
+        ))}
+      </div>
+
+      <div className="glass recent">
+        <div className="recent-top">
+          <h3>Recent activity</h3>
+          <span>THIS DEVICE</span>
+        </div>
+        <div className="clock">
+          <IconClock />
+        </div>
+        <b>No checks yet</b>
+        <p>Run a safety check to see a simple summary here.</p>
+      </div>
+
+      {/* Floating DEFENXIA voice orb — draggable, tap to talk */}
+      <DraggableOrb />
     </div>
   );
 };

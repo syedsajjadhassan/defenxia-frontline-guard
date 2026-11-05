@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Send, Bot, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { invokeEdgeFunction } from "@/lib/supabase-client";
+import { getPersonalKnowledgeAnswer } from "@/lib/personal-knowledge";
 
 interface Message {
   id: string;
@@ -37,6 +36,20 @@ const AIAnalysis = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
+
+    // Personal knowledge first — instant answer, no AI call needed
+    const personalAnswer = getPersonalKnowledgeAnswer(inputMessage);
+    if (personalAnswer) {
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: personalAnswer,
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await invokeEdgeFunction('ai-analysis', {
@@ -78,42 +91,49 @@ const AIAnalysis = () => {
     }
   };
 
+  const sendDisabled = !inputMessage.trim() || isLoading;
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-4xl h-screen flex flex-col">
-        <div className="p-4 border-b border-border">
-          <h1 className="text-3xl font-bold">AI Security Analysis</h1>
-          <p className="text-muted-foreground">Get intelligent insights on cybersecurity threats and best practices</p>
+    <div className="tpage animate-fade-in">
+      <span className="eyebrow">DEFENXIA · AI</span>
+      <h1 className="serif">AI Security Analysis.</h1>
+      <p className="tsub">Get intelligent insights on cybersecurity threats and best practices</p>
+
+      <div className="glass tcard" style={{ padding: 0, overflow: "hidden" }}>
+        <div style={{ padding: "22px 22px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <p className="clabel" style={{ margin: 0 }}>Security analyst</p>
+          <span className="chip"><span className="dot" />AI · Online</span>
         </div>
 
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
+        <ScrollArea style={{ height: "54vh", minHeight: 320 }}>
+          <div style={{ padding: "4px 22px 22px", display: "flex", flexDirection: "column", gap: 18 }}>
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                style={{ display: "flex", justifyContent: message.sender === 'user' ? "flex-end" : "flex-start" }}
               >
-                <div className={`flex gap-3 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className="flex-shrink-0">
+                <div style={{
+                  display: "flex",
+                  gap: 12,
+                  maxWidth: "85%",
+                  flexDirection: message.sender === 'user' ? "row-reverse" : "row"
+                }}>
+                  <div className="glass glass-pill w-9 h-9 shrink-0 flex items-center justify-center">
                     {message.sender === 'ai' ? (
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Bot size={16} className="text-primary" />
-                      </div>
+                      <Bot size={16} className="text-lav" />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                        <User size={16} className="text-secondary-foreground" />
-                      </div>
+                      <User size={16} className="text-lav" />
                     )}
                   </div>
                   <div
-                    className={`rounded-lg p-3 ${
+                    className={
                       message.sender === 'ai'
-                        ? 'bg-secondary text-secondary-foreground'
-                        : 'bg-primary text-primary-foreground'
-                    }`}
+                        ? 'glass glass-tool px-5 py-4'
+                        : 'bg-magenta/15 border border-magenta/30 rounded-3xl px-5 py-4'
+                    }
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    <p className="text-xs opacity-70 mt-1">
+                    <p className="text-sm whitespace-pre-wrap text-ink">{message.content}</p>
+                    <p className="text-xs text-faint mt-1">
                       {message.timestamp.toLocaleTimeString()}
                     </p>
                   </div>
@@ -121,15 +141,15 @@ const AIAnalysis = () => {
               </div>
             ))}
             {isLoading && (
-              <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Bot size={16} className="text-primary" />
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-start" }}>
+                <div className="glass glass-pill w-9 h-9 shrink-0 flex items-center justify-center">
+                  <Bot size={16} className="text-lav" />
                 </div>
-                <div className="bg-secondary text-secondary-foreground rounded-lg p-3">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="glass glass-tool px-5 py-4">
+                  <div className="flex gap-1.5">
+                    <div className="w-2 h-2 bg-lav rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-lav rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-lav rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
@@ -137,24 +157,34 @@ const AIAnalysis = () => {
           </div>
         </ScrollArea>
 
-        <div className="p-4 border-t border-border">
-          <div className="flex gap-2">
-            <Input
+        <div style={{
+          borderTop: "1px solid rgba(205,194,247,.08)",
+          padding: "16px 18px",
+          display: "flex",
+          gap: 12,
+          alignItems: "center"
+        }}>
+          <div style={{ flex: 1 }}>
+            <input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask about security threats, best practices, or get a vulnerability analysis..."
               disabled={isLoading}
-              className="flex-1"
+              className="field"
+              aria-label="Message the AI security analyst"
             />
-            <Button
-              onClick={sendMessage}
-              disabled={!inputMessage.trim() || isLoading}
-              className="px-6"
-            >
-              <Send size={16} />
-            </Button>
           </div>
+          <button
+            type="button"
+            onClick={sendMessage}
+            disabled={sendDisabled}
+            aria-label="Send message"
+            className="glass glass-pill shrink-0 flex items-center justify-center"
+            style={{ width: 54, height: 54, opacity: sendDisabled ? 0.4 : 1 }}
+          >
+            <Send size={18} className="text-lav" />
+          </button>
         </div>
       </div>
     </div>

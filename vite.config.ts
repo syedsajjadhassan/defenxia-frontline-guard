@@ -5,6 +5,9 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Relative asset paths: required for file:// (Electron) and Capacitor builds.
+  // Harmless for normal web hosting (resolves relative to index.html).
+  base: "./",
   server: {
     host: "::",
     port: 8080,

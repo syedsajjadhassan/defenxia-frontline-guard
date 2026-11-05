@@ -3,7 +3,7 @@ import { useSimulation } from "@/contexts/SimulationContext";
 import { analyzeIncomingSMS } from "@/pages/AISMSShield";
 import { insertWithSession } from "@/lib/supabase-client";
 import { toast } from "sonner";
-import { ShieldAlert, Phone, MessageSquareWarning, AlertTriangle, EyeOff } from "lucide-react";
+import { ShieldAlert, MessageSquareWarning, EyeOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -77,24 +77,24 @@ export const SimulateAttackPanel = () => {
     <>
       {/* Fake Scam SMS Alert */}
       <Dialog open={showSmsAlert} onOpenChange={setShowSmsAlert}>
-        <DialogContent className="border-destructive bg-destructive/10 backdrop-blur-xl">
+        <DialogContent className="glass glass-card">
           <DialogHeader>
-            <DialogTitle className="text-destructive flex items-center gap-2 text-xl">
+            <DialogTitle className="text-magenta flex items-center gap-2 text-xl font-serif">
               <MessageSquareWarning className="h-6 w-6" />
               🚨 SCAM SMS INTERCEPTED
             </DialogTitle>
             <DialogDescription className="space-y-3 pt-2">
-              <div className="bg-background/50 rounded-lg p-3">
-                <p className="text-sm text-muted-foreground italic">"{FAKE_SCAM_SMS}"</p>
+              <div className="bg-[rgba(205,194,247,0.04)] rounded-[18px] border border-[rgba(205,194,247,0.10)] p-3">
+                <p className="text-sm text-faint italic">"{FAKE_SCAM_SMS}"</p>
               </div>
               <div className="flex flex-wrap gap-1">
                 {['kyc', 'otp', 'account will be blocked', 'click here immediately'].map((kw, i) => (
-                  <span key={i} className="text-xs bg-destructive/30 text-destructive px-2 py-1 rounded font-mono">
+                  <span key={i} className="text-xs bg-[#c93a72]/20 text-[#ff6b6b] border border-[#c93a72]/40 px-2 py-1 rounded-full font-mono">
                     {kw}
                   </span>
                 ))}
               </div>
-              <p className="text-sm text-warning font-semibold">
+              <p className="text-sm text-lav font-semibold">
                 ⚠️ This is a SIMULATION for demo purposes.
               </p>
             </DialogDescription>
@@ -104,18 +104,18 @@ export const SimulateAttackPanel = () => {
 
       {/* Screen Share Alert Overlay */}
       {showScreenAlert && (
-        <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center gap-6 animate-fade-in">
+        <div className="fixed inset-0 z-[9999] bg-[#060609]/95 backdrop-blur-md flex flex-col items-center justify-center gap-6 animate-fade-in">
           <div className="relative">
-            <ShieldAlert className="h-24 w-24 text-destructive animate-pulse" />
+            <ShieldAlert className="h-24 w-24 text-[#ff6b6b] animate-pulse drop-shadow-[0_0_24px_rgba(193,74,94,0.6)]" />
           </div>
-          <h1 className="text-3xl font-bold text-white text-center">
+          <h1 className="text-3xl font-bold text-ink text-center font-serif">
             🚨 SCREEN SHARING DETECTED
           </h1>
-          <div className="flex items-center gap-2 bg-destructive/20 border border-destructive/50 rounded-full px-6 py-3">
-            <EyeOff className="h-5 w-5 text-destructive" />
-            <span className="text-destructive font-semibold">AnyDesk Activity Blocked</span>
+          <div className="flex items-center gap-2 bg-[#c93a72]/15 border border-[#c93a72]/40 rounded-full px-6 py-3">
+            <EyeOff className="h-5 w-5 text-[#ff6b6b]" />
+            <span className="text-[#ff6b6b] font-semibold">AnyDesk Activity Blocked</span>
           </div>
-          <p className="text-muted-foreground text-center text-sm px-8">
+          <p className="text-faint text-center text-sm px-8">
             Privacy shield activated. This is a SIMULATION demonstrating real-time threat response.
           </p>
         </div>

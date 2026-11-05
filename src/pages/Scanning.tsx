@@ -1,18 +1,31 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, AlertCircle, Shield, File, Network, Database, Settings } from "lucide-react";
+import {
+  IconShieldCheck,
+  IconFileSearch,
+  IconGlobe,
+  IconBug,
+  IconLock,
+  IconGear,
+  IconActivity,
+  IconArrow,
+} from "@/components/mockup/icons";
 
+/**
+ * Scanning — mockup-styled scan experience.
+ * Progress / step logic preserved exactly; only the JSX is re-skinned.
+ */
 const scanItems = [
-  { label: "Initializing security scan...", icon: Shield },
-  { label: "Checking system files...", icon: File },
-  { label: "Analyzing network connections...", icon: Network },
-  { label: "Scanning for malware...", icon: AlertCircle },
-  { label: "Checking data integrity...", icon: Database },
-  { label: "Verifying system settings...", icon: Settings },
-  { label: "Finalizing security report...", icon: CheckCircle },
+  { label: "Initializing security scan...", icon: IconShieldCheck },
+  { label: "Checking system files...", icon: IconFileSearch },
+  { label: "Analyzing network connections...", icon: IconGlobe },
+  { label: "Scanning for malware...", icon: IconBug },
+  { label: "Checking data integrity...", icon: IconLock },
+  { label: "Verifying system settings...", icon: IconGear },
+  { label: "Finalizing security report...", icon: IconActivity },
 ];
+
+const RING_C = 2 * Math.PI * 100;
 
 const Scanning = () => {
   const navigate = useNavigate();
@@ -24,11 +37,11 @@ const Scanning = () => {
     const interval = setInterval(() => {
       setProgress((prev) => {
         const newProgress = prev + 2;
-        
+
         // Update current scan item based on progress
         const itemIndex = Math.floor((newProgress / 100) * scanItems.length);
         setCurrentScanIndex(Math.min(itemIndex, scanItems.length - 1));
-        
+
         if (newProgress >= 100) {
           setIsComplete(true);
           clearInterval(interval);
@@ -41,90 +54,112 @@ const Scanning = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const CurrentIcon = scanItems[currentScanIndex]?.icon || IconShieldCheck;
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl mx-auto">
-        <div className="glass-card p-8 rounded-2xl text-center animate-fade-in">
-          {/* Header */}
-          <div className="mb-8">
-            <Shield className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
-            <h1 className="text-3xl font-bold mb-2">Security Scan in Progress</h1>
-            <p className="text-muted-foreground">
-              Please wait while we analyze your device security
-            </p>
-          </div>
+    <div className="tpage">
+      <span className="eyebrow">SECURITY SCAN</span>
+      <h1 className="serif">Security Scan.</h1>
+      <p className="tsub">Please wait while DEFENXIA analyzes your device security.</p>
 
-          {/* Progress Section */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium">Progress</span>
-              <span className="text-sm font-medium">{progress}%</span>
-            </div>
-            <Progress 
-              value={progress} 
-              className="h-3 mb-4"
+      <div className="glass tcard animate-fade-in" style={{ textAlign: "center" }}>
+        {isComplete && <div className="scan-sweep-line" aria-hidden="true" />}
+
+        <p className="eyebrow" style={{ fontSize: 11, marginBottom: 18 }}>
+          {isComplete ? "SCAN COMPLETE" : "SCANNING"}
+        </p>
+
+        <div className="scanring" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+          <svg viewBox="0 0 220 220">
+            <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(205,194,247,.08)" strokeWidth="10" />
+            <circle
+              cx="110"
+              cy="110"
+              r="100"
+              fill="none"
+              stroke="#e8357b"
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={RING_C}
+              strokeDashoffset={RING_C - (progress / 100) * RING_C}
+              style={{
+                transition: "stroke-dashoffset .12s linear",
+                filter: "drop-shadow(0 0 10px rgba(232,53,123,.6))",
+              }}
             />
+          </svg>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 56, lineHeight: 1 }}>
+              {progress}%
+            </span>
           </div>
+        </div>
 
-          {/* Current Scan Item */}
-          <div className="mb-8">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              {React.createElement(scanItems[currentScanIndex]?.icon || Shield, {
-                className: "h-6 w-6 text-primary animate-pulse"
-              })}
-              <span className="text-lg font-medium animate-slide-in">
-                {scanItems[currentScanIndex]?.label || "Scanning..."}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20 }}>
+          <span className={`ticon ${isComplete ? "" : "animate-pulse-aurora"}`} style={{ width: 52, height: 52, borderRadius: 17 }}>
+            <CurrentIcon style={{ width: 24, height: 24, stroke: "#cdc2f7", fill: "none", strokeWidth: 1.7 }} />
+          </span>
+          <span style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)", textAlign: "left" }}>
+            {isComplete ? "Finalizing security report..." : scanItems[currentScanIndex]?.label || "Scanning..."}
+          </span>
+        </div>
+
+        {isComplete && (
+          <div className="animate-fade-in" style={{ marginTop: 26 }}>
+            <h3 className="ok" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 32, marginBottom: 8 }}>
+              Scan Complete!
+            </h3>
+            <p style={{ marginBottom: 22 }}>Your device security has been analyzed successfully.</p>
+            <button type="button" onClick={() => navigate("/")} className="cta" style={{ minWidth: 250, margin: "0 auto" }}>
+              <span>View Results</span>
+              <span className="cta-arrow">
+                <IconArrow />
+              </span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="glass tcard">
+        <p className="clabel">Scan steps</p>
+        {scanItems.map((item, index) => {
+          const isCompleted = index < currentScanIndex;
+          const isCurrent = index === currentScanIndex && !isComplete;
+          const StepIcon = item.icon;
+          return (
+            <div className="trow" key={item.label}>
+              <span className="ticon" style={{ width: 48, height: 48, borderRadius: 16 }}>
+                <StepIcon
+                  style={{
+                    width: 22,
+                    height: 22,
+                    stroke: isCompleted ? "#8fd0a8" : "#cdc2f7",
+                    fill: "none",
+                    strokeWidth: 1.7,
+                  }}
+                />
+              </span>
+              <div style={{ flex: 1, fontSize: 15, color: isCompleted ? "var(--ink)" : "var(--muted)" }}>
+                {item.label}
+              </div>
+              <span
+                className="eyebrow"
+                style={{ fontSize: 10, color: isCompleted ? "#8fd0a8" : isCurrent ? "#f5a524" : "var(--faint)" }}
+              >
+                {isCompleted || (isComplete && index <= currentScanIndex) ? "DONE" : isCurrent ? "ACTIVE" : "QUEUED"}
               </span>
             </div>
-
-            {/* Scan Items List */}
-            <div className="space-y-3 text-left max-w-md mx-auto">
-              {scanItems.map((item, index) => {
-                const isCompleted = index < currentScanIndex;
-                const isCurrent = index === currentScanIndex;
-                
-                return (
-                  <div
-                    key={item.label}
-                    className={`flex items-center gap-3 p-2 rounded transition-all duration-300 ${
-                      isCompleted 
-                        ? "text-success" 
-                        : isCurrent 
-                        ? "text-primary bg-primary/10" 
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle className="h-4 w-4" />
-                    ) : (
-                      React.createElement(item.icon, { className: "h-4 w-4" })
-                    )}
-                    <span className="text-sm">{item.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Completion State */}
-          {isComplete && (
-            <div className="animate-fade-in">
-              <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-4 text-success">
-                Scan Complete!
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Your device security has been analyzed successfully.
-              </p>
-              <Button
-                onClick={() => navigate("/")}
-                className="glow-button text-white px-6 py-2"
-              >
-                View Results
-              </Button>
-            </div>
-          )}
-        </div>
+          );
+        })}
       </div>
     </div>
   );

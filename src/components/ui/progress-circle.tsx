@@ -33,17 +33,16 @@ export const ProgressCircle = ({ percentage, className, size = 200 }: ProgressCi
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="hsl(var(--border))"
+          stroke="rgba(205,194,247,0.10)"
           strokeWidth="3"
           fill="transparent"
-          className="opacity-20"
         />
         {/* Progress Circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="url(#gradient)"
+          stroke="url(#defenxiaAuroraGradient)"
           strokeWidth="3"
           fill="transparent"
           strokeDasharray={strokeDasharray}
@@ -51,23 +50,24 @@ export const ProgressCircle = ({ percentage, className, size = 200 }: ProgressCi
           strokeLinecap="round"
           className="transition-all duration-1000 ease-out"
           style={{
-            filter: "drop-shadow(0 0 10px hsl(262 83% 58% / 0.5))",
+            filter: "drop-shadow(0 0 10px rgba(232,53,123,0.5))",
           }}
         />
         <defs>
-          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(262 83% 58%)" />
-            <stop offset="100%" stopColor="hsl(240 100% 70%)" />
+          <linearGradient id="defenxiaAuroraGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f9613f" />
+            <stop offset="55%" stopColor="#e8357b" />
+            <stop offset="100%" stopColor="#8b3df0" />
           </linearGradient>
         </defs>
       </svg>
       
       {/* Center Content */}
       <div className="flex flex-col items-center justify-center text-center">
-        <span className="text-4xl font-bold text-primary-glow mb-1">
+        <span className="text-4xl font-bold text-lavbright mb-1">
           {animatedPercentage}%
         </span>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-faint">
           Secure and optimized
         </span>
       </div>

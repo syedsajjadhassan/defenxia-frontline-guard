@@ -404,6 +404,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rfid_cards: {
+        Row: {
+          created_at: string
+          id: string
+          owner: string | null
+          session_id: string | null
+          uid: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner?: string | null
+          session_id?: string | null
+          uid: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner?: string | null
+          session_id?: string | null
+          uid?: string
+        }
+        Relationships: []
+      }
       secure_sessions: {
         Row: {
           app_name: string
@@ -558,6 +582,7 @@ export type Database = {
           id: string
           network_name: string
           scan_date: string
+          scan_type: string | null
           security_type: string | null
           session_id: string | null
           signal_strength: number | null
@@ -570,6 +595,7 @@ export type Database = {
           id?: string
           network_name: string
           scan_date?: string
+          scan_type?: string | null
           security_type?: string | null
           session_id?: string | null
           signal_strength?: number | null
@@ -582,6 +608,7 @@ export type Database = {
           id?: string
           network_name?: string
           scan_date?: string
+          scan_type?: string | null
           security_type?: string | null
           session_id?: string | null
           signal_strength?: number | null
